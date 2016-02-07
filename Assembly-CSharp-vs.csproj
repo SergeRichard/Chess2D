@@ -46,11 +46,9 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scripts\BlackDestinationPresentationState.cs" />
-     <Compile Include="Assets\Scripts\BlackSelectionPresentationState.cs" />
+     <Compile Include="Assets\Scripts\ButtonController.cs" />
      <Compile Include="Assets\Scripts\GameManager.cs" />
-     <Compile Include="Assets\Scripts\WhiteDestinationPresentationState.cs" />
-     <Compile Include="Assets\Scripts\WhiteSelectionPresentationState.cs" />
+     <Compile Include="Assets\Scripts\LevelManager.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
