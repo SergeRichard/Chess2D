@@ -4,7 +4,7 @@ using System.Collections;
 public class GameManager : MonoBehaviour {
 
 	enum State {WhiteSelectionState, WhiteDestinationState, BlackSelectionState, BlackDestinationState};
-	State state = State.WhiteSelection;
+	State state = State.WhiteSelectionState;
 
 	#region Presentation states
 	WhiteSelectionPresentationState whiteSelectionPresentationState;
@@ -54,7 +54,7 @@ public class GameManager : MonoBehaviour {
 		blackSelectionPresentationState.OnEnter ();
 	}
 	void BlackDestinationState() {
-		blackSelectionPresentationState.OnEnter ();
+		blackDestinationPresentationState.OnEnter ();
 	}
 
 	#endregion
