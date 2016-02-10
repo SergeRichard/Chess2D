@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: 42463f819b6d837479c16b3203ec2dd2
-timeCreated: 1454723226
+timeCreated: 1455064189
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -29,7 +29,7 @@ TextureImporter:
   bumpmap:
     convertToNormalMap: 0
     externalNormalMap: 0
-    heightScale: .25
+    heightScale: 0.25
     normalMapFilter: 0
   isReadable: 0
   grayScaleToAlpha: 0
@@ -49,11 +49,12 @@ TextureImporter:
   lightmap: 0
   rGBM: 0
   compressionQuality: 50
+  allowsAlphaSplitting: 0
   spriteMode: 2
   spriteExtrude: 1
   spriteMeshType: 1
   alignment: 0
-  spritePivot: {x: .5, y: .5}
+  spritePivot: {x: 0.5, y: 0.5}
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spritePixelsToUnits: 100
   alphaIsTransparency: 1
@@ -68,9 +69,16 @@ TextureImporter:
         y: 64
         width: 64
         height: 64
-      alignment: 1
-      pivot: {x: 0, y: 1}
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -28, y: 29}
+        - {x: -28, y: -27}
+        - {x: -26, y: -28}
+        - {x: 20, y: -28}
+        - {x: 26, y: -13}
+        - {x: 26, y: 29}
     - name: BlackQueen
       rect:
         serializedVersion: 2
@@ -78,9 +86,18 @@ TextureImporter:
         y: 64
         width: 64
         height: 64
-      alignment: 1
-      pivot: {x: 0, y: 1}
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -16, y: 30}
+        - {x: -28, y: 24}
+        - {x: -28, y: -13}
+        - {x: -21, y: -29}
+        - {x: 19, y: -29}
+        - {x: 28, y: -10}
+        - {x: 28, y: 19}
+        - {x: 21, y: 30}
     - name: BlackRook
       rect:
         serializedVersion: 2
@@ -88,9 +105,15 @@ TextureImporter:
         y: 64
         width: 64
         height: 64
-      alignment: 1
-      pivot: {x: 0, y: 1}
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -16, y: 28}
+        - {x: -22, y: 24}
+        - {x: -22, y: -28}
+        - {x: 22, y: -28}
+        - {x: 22, y: 28}
     - name: BlackKnight
       rect:
         serializedVersion: 2
@@ -98,9 +121,18 @@ TextureImporter:
         y: 64
         width: 64
         height: 64
-      alignment: 1
-      pivot: {x: 0, y: 1}
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -24, y: -23}
+        - {x: -23, y: -29}
+        - {x: 24, y: -29}
+        - {x: 24, y: 4}
+        - {x: 21, y: 27}
+        - {x: 11, y: 30}
+        - {x: -13, y: 30}
+        - {x: -24, y: 7}
     - name: BlackBishop
       rect:
         serializedVersion: 2
@@ -108,9 +140,17 @@ TextureImporter:
         y: 64
         width: 64
         height: 64
-      alignment: 1
-      pivot: {x: 0, y: 1}
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -25, y: 29}
+        - {x: -29, y: 20}
+        - {x: -29, y: -28}
+        - {x: 25, y: -28}
+        - {x: 27, y: -26}
+        - {x: 27, y: 3}
+        - {x: 16, y: 29}
     - name: BlackPawn
       rect:
         serializedVersion: 2
@@ -118,9 +158,18 @@ TextureImporter:
         y: 64
         width: 64
         height: 64
-      alignment: 1
-      pivot: {x: 0, y: 1}
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -16, y: 1}
+        - {x: -16, y: -27}
+        - {x: 16, y: -27}
+        - {x: 16, y: 8}
+        - {x: 15, y: 24}
+        - {x: 7, y: 27}
+        - {x: -9, y: 27}
+        - {x: -15, y: 19}
     - name: WhiteKing
       rect:
         serializedVersion: 2
@@ -128,9 +177,18 @@ TextureImporter:
         y: 0
         width: 64
         height: 64
-      alignment: 1
-      pivot: {x: 0, y: 1}
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -27, y: 29}
+        - {x: -27, y: -4}
+        - {x: -23, y: -25}
+        - {x: -18, y: -28}
+        - {x: 17, y: -28}
+        - {x: 24, y: -27}
+        - {x: 27, y: -7}
+        - {x: 27, y: 29}
     - name: WhiteQueen
       rect:
         serializedVersion: 2
@@ -138,9 +196,18 @@ TextureImporter:
         y: 0
         width: 64
         height: 64
-      alignment: 1
-      pivot: {x: 0, y: 1}
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -16, y: 30}
+        - {x: -28, y: 24}
+        - {x: -28, y: -13}
+        - {x: -21, y: -29}
+        - {x: 19, y: -29}
+        - {x: 28, y: -10}
+        - {x: 28, y: 19}
+        - {x: 21, y: 30}
     - name: WhiteRook
       rect:
         serializedVersion: 2
@@ -148,9 +215,15 @@ TextureImporter:
         y: 0
         width: 64
         height: 64
-      alignment: 1
-      pivot: {x: 0, y: 1}
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -16, y: 28}
+        - {x: -22, y: 24}
+        - {x: -22, y: -28}
+        - {x: 22, y: -28}
+        - {x: 22, y: 28}
     - name: WhiteKnight
       rect:
         serializedVersion: 2
@@ -158,9 +231,18 @@ TextureImporter:
         y: 0
         width: 64
         height: 64
-      alignment: 1
-      pivot: {x: 0, y: 1}
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -24, y: -23}
+        - {x: -23, y: -29}
+        - {x: 24, y: -29}
+        - {x: 24, y: 4}
+        - {x: 21, y: 27}
+        - {x: 11, y: 30}
+        - {x: -13, y: 30}
+        - {x: -24, y: 7}
     - name: WhiteBishop
       rect:
         serializedVersion: 2
@@ -168,9 +250,19 @@ TextureImporter:
         y: 0
         width: 64
         height: 64
-      alignment: 1
-      pivot: {x: 0, y: 1}
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 12, y: 29}
+        - {x: -20, y: 29}
+        - {x: -28, y: 11}
+        - {x: -28, y: -27}
+        - {x: -27, y: -28}
+        - {x: 26, y: -28}
+        - {x: 28, y: -26}
+        - {x: 28, y: -1}
+        - {x: 15, y: 27}
     - name: WhitePawn
       rect:
         serializedVersion: 2
@@ -178,9 +270,19 @@ TextureImporter:
         y: 0
         width: 64
         height: 64
-      alignment: 1
-      pivot: {x: 0, y: 1}
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: -16, y: 1}
+        - {x: -16, y: -27}
+        - {x: 16, y: -27}
+        - {x: 16, y: 8}
+        - {x: 15, y: 24}
+        - {x: 7, y: 27}
+        - {x: -9, y: 27}
+        - {x: -15, y: 19}
+    outline: []
   spritePackingTag: 
   userData: 
   assetBundleName: 
