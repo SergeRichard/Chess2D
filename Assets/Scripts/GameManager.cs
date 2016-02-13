@@ -5,9 +5,34 @@ using System;
 
 
 public class GameManager : MonoBehaviour {
-	
-	enum State {WhiteSelectionState, WhiteDestinationState, BlackSelectionState, BlackDestinationState};
-	State state = State.WhiteSelectionState;
+
+	enum State {
+		IntroState, 
+		WhiteSelectionState, 
+		WhiteDestinationState, 
+		CheckIfLegalWhiteMoveState, 
+		CheckIfWhiteMatesState, 
+		CheckIfWhiteStaleMatesState,
+		MoveWhitePieceState,
+		BlackSelectionState, 
+		BlackDestinationState,
+		CheckIfLegalBlackMoveState, 
+		CheckIfBlackMatesState, 
+		CheckIfBlackStaleMatesState,
+		MoveBlackPieceState,
+		ResultState
+	};
+	enum InputState {
+		WaitingForClick,
+		SquareIsClicked
+	}
+	InputState inputState = InputState.WaitingForClick;
+	static string clickedSquareName = "";
+	static string selectionSquareName = "";
+	static string destinationSquareName = "";
+
+
+	State state = State.IntroState;
 	public List<GameObject> piecesPrefab = new List<GameObject>();
 	private List<Square> squares = new List<Square>();
 
@@ -43,11 +68,202 @@ public class GameManager : MonoBehaviour {
 		}
 
 	}
+
 	// Use this for initialization
 	void Start () {
+		DirectToState ();
+
+
+	}
+	void DirectToState() {
+//		bool exit = false;
+//		while (exit) {
+			switch (state) {
+			case State.IntroState:
+				IntroState ();
+				break;
+			case State.WhiteSelectionState:
+				WhiteSelectionState ();
+				break;
+			case State.WhiteDestinationState:
+				WhiteDestinationState ();
+				break;
+			case State.CheckIfLegalWhiteMoveState:
+				CheckIfLegalWhiteMoveState ();
+				break;
+			case State.CheckIfWhiteMatesState:
+				CheckIfWhiteMatesState ();
+				break;
+			case State.CheckIfWhiteStaleMatesState:
+				CheckIfWhiteStaleMatesState ();
+				break;
+			case State.MoveWhitePieceState:
+				MoveWhitePieceState ();
+				break;
+			case State.BlackSelectionState:
+				BlackSelectionState ();
+				break;
+			case State.BlackDestinationState:
+				BlackDestinationState ();
+				break;
+			case State.CheckIfBlackMatesState:
+				CheckIfBlackMatesState ();
+				break;
+			case State.CheckIfBlackStaleMatesState:
+				CheckIfBlackStaleMatesState ();
+				break;
+			case State.ResultState:
+				ResultState ();
+				break;
+			case State.MoveBlackPieceState:
+				MoveWhitePieceState ();
+				break;
+			default:
+				Debug.LogError("Invalid State.");
+				break;
+			}
+		//}
+
+	}
+
+	#region States
+	void IntroState() {
 		GetSquareTransforms ();
 		InitializeBoard ();
+		state = State.WhiteSelectionState;
+		DirectToState ();
+	}
+	void WhiteSelectionState() {
+		Debug.Log ("Inside WhiteSelectionState");
+		if (inputState == InputState.SquareIsClicked) {
+			inputState = InputState.WaitingForClick;
+			HighlightSquare ();
+			selectionSquareName = clickedSquareName;
+			state = State.WhiteDestinationState;
+			DirectToState ();
+		}
+		//state = State.WhiteDestinationState;
+	}
+	void WhiteDestinationState() {
+		Debug.Log ("Inside WhiteDestinationState");
+		if (inputState == InputState.SquareIsClicked) {
+			inputState = InputState.WaitingForClick;
+			HighlightSquare ();
+			destinationSquareName = clickedSquareName;
+			state = State.CheckIfLegalWhiteMoveState;
+			DirectToState ();
+		}
+		//state = State.BlackSelectionState;
+	}
+	void CheckIfLegalWhiteMoveState () {
+		Debug.Log ("Inside CheckIfLegalWhiteMoveState");
+		bool legal = CheckIfWhitesMoveIsLegal ();
+		if (legal) {
+			state = State.CheckIfWhiteMatesState;
 
+		} else {
+			Debug.Log ("Illegal move!");
+
+			state = State.WhiteSelectionState;
+		}
+		UnhighlightSquares ();
+		DirectToState ();
+	}
+	void CheckIfWhiteMatesState() {
+		Debug.Log ("Inside CheckIfWhiteMatesState");
+		bool mates = CheckIfWhiteMates ();
+		if (mates) {
+			state = State.ResultState;
+			DirectToState ();
+		} else {
+			state = State.CheckIfWhiteStaleMatesState;
+			DirectToState ();
+		}
+	}
+	void CheckIfWhiteStaleMatesState() {
+		Debug.Log ("Inside CheckIfWhiteStaleMatesState");
+		bool staleMates = CheckIfWhiteHasStaleMated ();
+		if (staleMates) {
+			state = State.ResultState;
+
+		} else {
+			state = State.MoveWhitePieceState;
+		}
+		DirectToState ();
+	}
+	void MoveWhitePieceState() {
+		Debug.Log ("Inside MoveWhitePieceState");
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (selectionSquareName == squareNames [col, row]) {
+
+
+				}
+
+			}
+		}
+			
+
+	}
+	void BlackSelectionState() {
+		state = State.BlackDestinationState;
+	}
+	void BlackDestinationState() {
+
+	}
+	void CheckIfBlackMatesState() {
+
+	}
+	void CheckIfBlackStaleMatesState() {
+
+	}
+	void MoveBlackPieceState() {
+
+
+	}
+	void ResultState() {
+
+
+	}
+	#endregion
+	#region Events
+	public void SquareClicked(string squareName) {
+		Debug.Log (squareName + " clicked!");
+		clickedSquareName = squareName;
+		inputState = InputState.SquareIsClicked;
+		DirectToState ();
+	}
+
+	#endregion
+	#region helper functions
+
+	bool CheckIfWhitesMoveIsLegal()
+	{
+		return true;
+	}
+	bool CheckIfWhiteMates()
+	{
+		return false;
+	}
+	bool CheckIfWhiteHasStaleMated()
+	{
+		return false;
+	}
+	void HighlightSquare() {
+		foreach (var s in squares) {
+			if (s.name == clickedSquareName) {
+				s.squareTransform.GetComponent<SpriteRenderer> ().color = new Color (1f, 1f, 1f, 1f);
+			}
+
+		}
+
+	}
+	void UnhighlightSquares() {
+		foreach (var s in squares) {
+			if (s.name == selectionSquareName || s.name == destinationSquareName) {
+				s.squareTransform.GetComponent<SpriteRenderer> ().color = new Color (1f, 1f, 1f, 0f);
+			}
+		}
 	}
 	void GetSquareTransforms()	{
 		for (int row = 0; row < 8; row++) {
@@ -95,4 +311,5 @@ public class GameManager : MonoBehaviour {
 		}
 		return null;
 	}
+	#endregion
 }
