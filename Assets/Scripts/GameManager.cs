@@ -30,22 +30,14 @@ public class GameManager : MonoBehaviour {
 	static string clickedSquareName = "";
 	static string selectionSquareName = "";
 	static string destinationSquareName = "";
+	List<BoardPosition> boardPositions = new List<BoardPosition>();
 
+	int plyMove = 0;
 
 	State state = State.IntroState;
 	public List<GameObject> piecesPrefab = new List<GameObject>();
 	private List<Square> squares = new List<Square>();
 
-	public static string[,] piecesOnBoard = new string[,] { 
-		{"BR","BN","BB","BK","BQ","BB","BN","BR"},
-		{"BP","BP","BP","BP","BP","BP","BP","BP"},
-		{"--","--","--","--","--","--","--","--"},
-		{"--","--","--","--","--","--","--","--"},
-		{"--","--","--","--","--","--","--","--"},
-		{"--","--","--","--","--","--","--","--"},
-		{"WP","WP","WP","WP","WP","WP","WP","WP"},
-		{"WR","WN","WB","WK","WQ","WB","WN","WR"},
-	};
 	public static string[,] squareNames = new string[,] { 
 		{"A8","B8","C8","D8","E8","F8","G8","H8"},
 		{"A7","B7","C7","D7","E7","F7","G7","H7"},
@@ -193,20 +185,14 @@ public class GameManager : MonoBehaviour {
 	}
 	void MoveWhitePieceState() {
 		Debug.Log ("Inside MoveWhitePieceState");
-		for (int row = 0; row < 8; row++) {
-			for (int col = 0; col < 8; col++) {
-				if (selectionSquareName == squareNames [col, row]) {
-
-
-				}
-
-			}
-		}
+		MoveWhitePieceToDestination ();
+		state = State.BlackSelectionState;
 			
 
 	}
 	void BlackSelectionState() {
-		state = State.BlackDestinationState;
+		Debug.Log ("Inside BlackSelectionState");
+		//state = State.BlackDestinationState;
 	}
 	void BlackDestinationState() {
 
@@ -236,7 +222,74 @@ public class GameManager : MonoBehaviour {
 
 	#endregion
 	#region helper functions
+	void MoveWhitePieceToDestination() {
+		string[,] tempBoard = new string[8, 8];
+		string temp = "";
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				tempBoard[col,row] = boardPositions[plyMove].piecesOnBoard [col, row];
 
+			}
+		}
+		// find the selection square and assign an empty space to it
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (selectionSquareName == squareNames [col, row]) {
+					temp = tempBoard[col,row];
+					tempBoard [col, row] = "--"; 
+				}
+			}
+		}
+		// Find the destination square and assign the the temp variable holding the selection piece to the destination square.
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (destinationSquareName == squareNames [col, row]) {
+					tempBoard [col, row] = temp; 
+				}
+			}
+		}
+		plyMove++;
+		BoardPosition boardPosition = new BoardPosition (plyMove);
+		boardPosition.piecesOnBoard = new string[8, 8];
+
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				boardPosition.piecesOnBoard[col, row] = tempBoard [col, row];
+			}
+		}
+		boardPositions.Add (boardPosition);
+		RemoveAllPieces ();
+		UpdateBoard ();
+	}
+	void UpdateBoard () {
+
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				// "--" means it's an uninhabited square
+				if (boardPositions[plyMove].piecesOnBoard[col,row] != "--") {
+					Transform squareTransform = FindPosition (row, col);
+					GameObject piecePrefab = FindPrefab (row, col, plyMove);
+					GameObject piece = Instantiate (piecePrefab, squareTransform.position, Quaternion.identity) as GameObject;
+					piece.transform.parent = squareTransform;
+					piece.GetComponent<SpriteRenderer> ().sortingOrder = 5;
+				}
+
+			}
+		}
+
+	}
+	void RemoveAllPieces () {
+
+		foreach (var squareName in squareNames) {
+			GameObject sq = GameObject.Find (squareName);
+			if (sq.transform.childCount > 0) {
+				foreach (Transform s in sq.transform) {
+					Destroy (s.gameObject);
+				}
+			}
+				
+		}
+	}
 	bool CheckIfWhitesMoveIsLegal()
 	{
 		return true;
@@ -276,14 +329,28 @@ public class GameManager : MonoBehaviour {
 		}
 
 	}
+
 	void InitializeBoard() {
 		//Instantiate (piecesPrefab [0], new Vector3 (0, 0, 0), Quaternion.identity);
+		BoardPosition boardPosition = new BoardPosition(plyMove);
+		boardPosition.piecesOnBoard = new string[,] { 
+			{"BR","BN","BB","BK","BQ","BB","BN","BR"},
+			{"BP","BP","BP","BP","BP","BP","BP","BP"},
+			{"--","--","--","--","--","--","--","--"},
+			{"--","--","--","--","--","--","--","--"},
+			{"--","--","--","--","--","--","--","--"},
+			{"--","--","--","--","--","--","--","--"},
+			{"WP","WP","WP","WP","WP","WP","WP","WP"},
+			{"WR","WN","WB","WK","WQ","WB","WN","WR"},
+		};
+		boardPositions.Add (boardPosition);
+
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
 				// "--" means it's an uninhabited square
-				if (piecesOnBoard[col,row] != "--") {
+				if (boardPositions[plyMove].piecesOnBoard[col,row] != "--") {
 					Transform squareTransform = FindPosition (row, col);
-					GameObject piecePrefab = FindPrefab (row, col);
+					GameObject piecePrefab = FindPrefab (row, col, plyMove);
 					GameObject piece = Instantiate (piecePrefab, squareTransform.position, Quaternion.identity) as GameObject;
 					piece.transform.parent = squareTransform;
 					piece.GetComponent<SpriteRenderer> ().sortingOrder = 5;
@@ -302,10 +369,10 @@ public class GameManager : MonoBehaviour {
 		}
 		return null;
 	}
-	GameObject FindPrefab(int row, int column)
+	GameObject FindPrefab(int row, int column, int plyMove)
 	{
 		foreach (var p in piecesPrefab) {
-			if (p.GetComponent<Piece> ().shortName == piecesOnBoard [column, row]) {
+			if (p.GetComponent<Piece> ().shortName == boardPositions[plyMove].piecesOnBoard [column, row]) {
 				return p;
 			}
 		}
