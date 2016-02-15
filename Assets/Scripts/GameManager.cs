@@ -68,12 +68,14 @@ public class GameManager : MonoBehaviour {
 
 	}
 	void DirectToState() {
-//		bool exit = false;
-//		while (exit) {
-			switch (state) {
+
+		switch (state) {
 			case State.IntroState:
 				IntroState ();
 				break;
+			//////////////////
+			// White States //
+			//////////////////
 			case State.WhiteSelectionState:
 				WhiteSelectionState ();
 				break;
@@ -92,11 +94,18 @@ public class GameManager : MonoBehaviour {
 			case State.MoveWhitePieceState:
 				MoveWhitePieceState ();
 				break;
+			//////////////////
+			// Black States //
+			//////////////////
 			case State.BlackSelectionState:
 				BlackSelectionState ();
 				break;
 			case State.BlackDestinationState:
 				BlackDestinationState ();
+				break;
+		
+			case State.CheckIfLegalBlackMoveState:
+				CheckIfLegalBlackMoveState ();
 				break;
 			case State.CheckIfBlackMatesState:
 				CheckIfBlackMatesState ();
@@ -104,17 +113,17 @@ public class GameManager : MonoBehaviour {
 			case State.CheckIfBlackStaleMatesState:
 				CheckIfBlackStaleMatesState ();
 				break;
+			case State.MoveBlackPieceState:
+				MoveBlackPieceState ();
+				break;
 			case State.ResultState:
 				ResultState ();
-				break;
-			case State.MoveBlackPieceState:
-				MoveWhitePieceState ();
 				break;
 			default:
 				Debug.LogError("Invalid State.");
 				break;
-			}
-		//}
+		}
+
 
 	}
 
@@ -151,7 +160,7 @@ public class GameManager : MonoBehaviour {
 		Debug.Log ("Inside CheckIfLegalWhiteMoveState");
 		bool legal = CheckIfWhitesMoveIsLegal ();
 		if (legal) {
-			state = State.CheckIfWhiteMatesState;
+			state = State.MoveWhitePieceState;
 
 		} else {
 			Debug.Log ("Illegal move!");
@@ -160,6 +169,13 @@ public class GameManager : MonoBehaviour {
 		}
 		UnhighlightSquares ();
 		DirectToState ();
+	}
+	void MoveWhitePieceState() {
+		Debug.Log ("Inside MoveWhitePieceState");
+		MovePieceToDestination ();
+		state = State.CheckIfWhiteMatesState;
+		DirectToState ();	
+
 	}
 	void CheckIfWhiteMatesState() {
 		Debug.Log ("Inside CheckIfWhiteMatesState");
@@ -179,36 +195,77 @@ public class GameManager : MonoBehaviour {
 			state = State.ResultState;
 
 		} else {
-			state = State.MoveWhitePieceState;
+			state = State.BlackSelectionState;
 		}
 		DirectToState ();
 	}
-	void MoveWhitePieceState() {
-		Debug.Log ("Inside MoveWhitePieceState");
-		MoveWhitePieceToDestination ();
-		state = State.BlackSelectionState;
-			
 
-	}
 	void BlackSelectionState() {
 		Debug.Log ("Inside BlackSelectionState");
-		//state = State.BlackDestinationState;
+		if (inputState == InputState.SquareIsClicked) {
+			inputState = InputState.WaitingForClick;
+			HighlightSquare ();
+			selectionSquareName = clickedSquareName;
+			state = State.BlackDestinationState;
+			DirectToState ();
+		}
 	}
 	void BlackDestinationState() {
-
+		Debug.Log ("Inside BlackDestinationState");
+		if (inputState == InputState.SquareIsClicked) {
+			inputState = InputState.WaitingForClick;
+			HighlightSquare ();
+			destinationSquareName = clickedSquareName;
+			state = State.CheckIfLegalBlackMoveState;
+			DirectToState ();
+		}
 	}
-	void CheckIfBlackMatesState() {
+	void CheckIfLegalBlackMoveState() {
+		Debug.Log ("Inside CheckIfLegalBlackMoveState");
+		bool legal = CheckIfBlacksMoveIsLegal ();
+		if (legal) {
+			state = State.MoveBlackPieceState;
 
-	}
-	void CheckIfBlackStaleMatesState() {
+		} else {
+			Debug.Log ("Illegal move!");
+
+			state = State.BlackSelectionState;
+		}
+		UnhighlightSquares ();
+		DirectToState ();
 
 	}
 	void MoveBlackPieceState() {
-
-
+		Debug.Log ("Inside MoveBlackPieceState");
+		MovePieceToDestination ();
+		state = State.CheckIfBlackMatesState;
+		DirectToState ();
 	}
-	void ResultState() {
+	void CheckIfBlackMatesState() {
+		Debug.Log ("Inside CheckIfBlackMatesState");
+		bool mates = CheckIfBlackMates ();
+		if (mates) {
+			state = State.ResultState;
+			DirectToState ();
+		} else {
+			state = State.CheckIfBlackStaleMatesState;
+			DirectToState ();
+		}
+	}
+	void CheckIfBlackStaleMatesState() {
+		Debug.Log ("Inside CheckIfBlackStaleMatesState");
+		bool staleMates = CheckIfBlackHasStaleMated ();
+		if (staleMates) {
+			state = State.ResultState;
 
+		} else {
+			state = State.WhiteSelectionState;
+		}
+		DirectToState ();
+	}
+
+	void ResultState() {
+		Debug.Log ("Inside ResultState");
 
 	}
 	#endregion
@@ -222,7 +279,7 @@ public class GameManager : MonoBehaviour {
 
 	#endregion
 	#region helper functions
-	void MoveWhitePieceToDestination() {
+	void MovePieceToDestination() {
 		string[,] tempBoard = new string[8, 8];
 		string temp = "";
 		for (int row = 0; row < 8; row++) {
@@ -290,16 +347,22 @@ public class GameManager : MonoBehaviour {
 				
 		}
 	}
-	bool CheckIfWhitesMoveIsLegal()
-	{
+	bool CheckIfWhitesMoveIsLegal()	{
 		return true;
 	}
-	bool CheckIfWhiteMates()
-	{
+	bool CheckIfBlacksMoveIsLegal() {
+		return true;
+	}
+	bool CheckIfWhiteMates() {
 		return false;
 	}
-	bool CheckIfWhiteHasStaleMated()
-	{
+	bool CheckIfBlackMates() {
+		return false;
+	}
+	bool CheckIfWhiteHasStaleMated() {
+		return false;
+	}
+	bool CheckIfBlackHasStaleMated() {
 		return false;
 	}
 	void HighlightSquare() {
@@ -334,14 +397,14 @@ public class GameManager : MonoBehaviour {
 		//Instantiate (piecesPrefab [0], new Vector3 (0, 0, 0), Quaternion.identity);
 		BoardPosition boardPosition = new BoardPosition(plyMove);
 		boardPosition.piecesOnBoard = new string[,] { 
-			{"BR","BN","BB","BK","BQ","BB","BN","BR"},
+			{"BR","BN","BB","BQ","BK","BB","BN","BR"},
 			{"BP","BP","BP","BP","BP","BP","BP","BP"},
 			{"--","--","--","--","--","--","--","--"},
 			{"--","--","--","--","--","--","--","--"},
 			{"--","--","--","--","--","--","--","--"},
 			{"--","--","--","--","--","--","--","--"},
 			{"WP","WP","WP","WP","WP","WP","WP","WP"},
-			{"WR","WN","WB","WK","WQ","WB","WN","WR"},
+			{"WR","WN","WB","WQ","WK","WB","WN","WR"},
 		};
 		boardPositions.Add (boardPosition);
 
