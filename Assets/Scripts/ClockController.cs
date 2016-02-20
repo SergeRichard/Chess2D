@@ -15,7 +15,7 @@ public class ClockController : MonoBehaviour {
 	public Text TimeWhiteText;
 	public Text TimeBlackText;
 
-	public enum StartClockState {Wait, ForWhite, ForBlack};
+	public enum StartClockState {Wait, ForWhite, ForBlack, WhiteFlags, BlackFlags};
 
 	public StartClockState clockState = StartClockState.Wait;
 
@@ -33,17 +33,35 @@ public class ClockController : MonoBehaviour {
 		switch (clockState) {
 		case StartClockState.ForWhite:
 			CalculateTimeForWhite ();
-			timeToDisplayForWhite = FormatTime (hoursForWhite,minutesForWhite,secondsForWhite);
+			timeToDisplayForWhite = FormatTime (hoursForWhite, minutesForWhite, secondsForWhite);
+			TimeWhiteText.color = Color.white;
 			TimeWhiteText.text = timeToDisplayForWhite;
 			break;
 		case StartClockState.ForBlack:
 			CalculateTimeForBlack ();
-			timeToDisplayForBlack = FormatTime (hoursForBlack,minutesForBlack,secondsForBlack);
+			timeToDisplayForBlack = FormatTime (hoursForBlack, minutesForBlack, secondsForBlack);
+			TimeBlackText.color = Color.white;
 			TimeBlackText.text = timeToDisplayForBlack;
+			break;
+		case StartClockState.WhiteFlags:
+			ShowThatWhiteHasFlagged ();
+			break;
+		case StartClockState.BlackFlags:
+			ShowThatBlackHasFlagged ();
 			break;
 		}
 	}
 	#region helper methods
+	void ShowThatWhiteHasFlagged() {
+		TimeWhiteText.color = Color.red;
+		TimeWhiteText.text = "Time";
+
+	}
+	void ShowThatBlackHasFlagged() {
+		TimeBlackText.color = Color.red;
+		TimeBlackText.text = "Time";
+
+	}
 	void CalculateTimeForWhite()
 	{
 		// adding seconds
@@ -57,7 +75,9 @@ public class ClockController : MonoBehaviour {
 			minutesForWhite = 59;
 			hoursForWhite--;
 		}
-
+		if (hoursForWhite < 0) {
+			clockState = StartClockState.WhiteFlags;
+		}
 	}
 	void CalculateTimeForBlack()
 	{
@@ -72,7 +92,9 @@ public class ClockController : MonoBehaviour {
 			minutesForBlack = 59;
 			hoursForBlack--;
 		}
-
+		if (hoursForBlack < 0) {
+			clockState = StartClockState.BlackFlags;
+		}
 	}
 	string FormatTime(int hours, int minutes, float seconds) {
 		return hours.ToString () 

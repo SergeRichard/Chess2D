@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System;
@@ -38,6 +39,7 @@ public class GameManager : MonoBehaviour {
 	public List<GameObject> piecesPrefab = new List<GameObject>();
 	private List<Square> squares = new List<Square>();
 	public ClockController clockController;
+	public Text moveNotationText;
 
 	public static string[,] squareNames = new string[,] { 
 		{"A8","B8","C8","D8","E8","F8","G8","H8"},
@@ -286,6 +288,8 @@ public class GameManager : MonoBehaviour {
 	void MovePieceToDestination() {
 		string[,] tempBoard = new string[8, 8];
 		string temp = "";
+		string textNotation = GetMoveTextNotation();
+
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
 				tempBoard[col,row] = boardPositions[plyMove].piecesOnBoard [col, row];
@@ -309,8 +313,12 @@ public class GameManager : MonoBehaviour {
 				}
 			}
 		}
+		// create text notation before plyMove++
+
+		//Debug.Log ("Move: " + textNotation);
+
 		plyMove++;
-		BoardPosition boardPosition = new BoardPosition (plyMove);
+		BoardPosition boardPosition = new BoardPosition (plyMove, textNotation);
 		boardPosition.piecesOnBoard = new string[8, 8];
 
 		for (int row = 0; row < 8; row++) {
@@ -319,8 +327,115 @@ public class GameManager : MonoBehaviour {
 			}
 		}
 		boardPositions.Add (boardPosition);
+		RefreshMoveNotationBoard();
 		RemoveAllPieces ();
 		UpdateBoard ();
+	}
+	string GetMoveTextNotation() {
+		string notation = string.Empty;
+
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (selectionSquareName == squareNames [col, row]) {
+					notation += FormatSelectionPartOfNotation (squareNames, col, row);
+				}
+			}
+		}
+		if (PieceIsMoving()) {
+			notation += "-";
+		} else if (PieceIsAttacking()) {
+			notation += "x";
+		}
+		foreach (string sn in squareNames) {
+			if (destinationSquareName == sn) {
+				notation += sn.ToLower();
+			}
+		}
+		return notation;
+	}
+	bool PieceIsMoving() {
+
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (squareNames [col, row] == destinationSquareName) {
+					return boardPositions [plyMove].piecesOnBoard [col, row] == "--";
+				}
+			}
+
+		}
+		return false;
+	}
+	bool PieceIsAttacking() {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (squareNames [col, row] == destinationSquareName) {
+					return boardPositions [plyMove].piecesOnBoard [col, row] != "--";
+				}
+			}
+
+		}
+		return false;
+	}
+	void RefreshMoveNotationBoard() {
+		string notation = string.Empty;
+		int moveCounter = 0;
+		int counter = 0;
+		foreach (var bp in boardPositions) {
+			// if not initial board position which of course has no moves yet
+			if (bp.positionNumber != 0) {
+				if (counter % 2 == 0) {
+					moveCounter++;
+					notation += moveCounter + ".";
+				} else {
+					notation += "  ";
+				}
+
+
+				notation += bp.moveNotation + (counter%2==0 ? "" : "   ");
+				counter++;
+			}
+		}
+		//Debug.Log (notation);
+		moveNotationText.text = notation;
+	}
+	string FormatSelectionPartOfNotation(string[,] squares, int col, int row) {
+		string notation = string.Empty;
+		string piece = boardPositions [plyMove].piecesOnBoard [col, row];
+		string square = squares [col, row];
+
+		// add piece letter to beginning of notation (unless it's a pawn)
+		switch (piece) {
+		case "WR":
+		case "BR":
+			notation = "R";
+			break;
+		case "WN":
+		case "BN":
+			notation = "N";
+			break;
+		case "WB":
+		case "BB":
+			notation = "B";
+			break;
+		case "WQ":
+		case "BQ":
+			notation = "Q";
+			break;
+		case "WK":
+		case "BK":
+			notation = "K";
+			break;
+		case "WP":
+		case "BP":
+			// do nothing. Pawn letter is not mentionned in notation.
+			break;
+		default:
+			Debug.LogError ("No piece found in selectionSquare");
+			break;
+
+		}
+		notation += square.ToLower();
+		return notation;
 	}
 	void UpdateBoard () {
 
@@ -399,7 +514,7 @@ public class GameManager : MonoBehaviour {
 
 	void InitializeBoard() {
 		//Instantiate (piecesPrefab [0], new Vector3 (0, 0, 0), Quaternion.identity);
-		BoardPosition boardPosition = new BoardPosition(plyMove);
+		BoardPosition boardPosition = new BoardPosition(plyMove, "");
 		boardPosition.piecesOnBoard = new string[,] { 
 			{"BR","BN","BB","BQ","BK","BB","BN","BR"},
 			{"BP","BP","BP","BP","BP","BP","BP","BP"},

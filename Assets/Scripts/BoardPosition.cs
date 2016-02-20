@@ -5,10 +5,12 @@ public class BoardPosition
 {
 	public string[,] piecesOnBoard;
 	public int positionNumber;
-	// Use this for initialization
 
-	public BoardPosition (int positionNumber) {
+	public string moveNotation;
+
+	public BoardPosition (int positionNumber, string moveNotation) {
 		this.positionNumber = positionNumber;
+		this.moveNotation = moveNotation;
 	}
 }
 
