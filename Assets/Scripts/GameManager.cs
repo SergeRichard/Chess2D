@@ -37,6 +37,7 @@ public class GameManager : MonoBehaviour {
 	State state = State.IntroState;
 	public List<GameObject> piecesPrefab = new List<GameObject>();
 	private List<Square> squares = new List<Square>();
+	public ClockController clockController;
 
 	public static string[,] squareNames = new string[,] { 
 		{"A8","B8","C8","D8","E8","F8","G8","H8"},
@@ -132,6 +133,7 @@ public class GameManager : MonoBehaviour {
 		GetSquareTransforms ();
 		InitializeBoard ();
 		state = State.WhiteSelectionState;
+		clockController.clockState = ClockController.StartClockState.Wait;
 		DirectToState ();
 	}
 	void WhiteSelectionState() {
@@ -174,6 +176,7 @@ public class GameManager : MonoBehaviour {
 		Debug.Log ("Inside MoveWhitePieceState");
 		MovePieceToDestination ();
 		state = State.CheckIfWhiteMatesState;
+		clockController.clockState = ClockController.StartClockState.ForBlack;
 		DirectToState ();	
 
 	}
@@ -239,6 +242,7 @@ public class GameManager : MonoBehaviour {
 		Debug.Log ("Inside MoveBlackPieceState");
 		MovePieceToDestination ();
 		state = State.CheckIfBlackMatesState;
+		clockController.clockState = ClockController.StartClockState.ForWhite;
 		DirectToState ();
 	}
 	void CheckIfBlackMatesState() {
