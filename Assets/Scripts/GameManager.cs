@@ -516,7 +516,7 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 	bool CheckIfWhitesMoveIsLegal()	{
-		// TODO: figure out piece that is moving and where to. Check each piece either through seperate classes or functions and determine if legal.
+		
 		string selectSquare;
 		int selectCol, selectRow;
 		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
@@ -573,8 +573,35 @@ public class GameManager : MonoBehaviour {
 
 	}
 	bool CheckIfBlacksMoveIsLegal() {
-		// TODO: figure out piece that is moving and where to. Check each piece either through seperate classes or functions and determine if legal.
-		return true;
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		bool isLegal = false;
+
+		switch (selectSquare) {
+		case "BR":
+			isLegal = BlackRookMoveLegal ();
+			break;
+		case "BN":
+			isLegal = BlackKnightMoveLegal ();
+			break;
+		case "BB":
+			isLegal = BlackBishopMoveLegal ();
+			break;
+		case "BQ":
+			isLegal = BlackQueenMoveLegal ();
+			break;
+		case "BK":
+			isLegal = BlackKingMoveLegal ();
+			break;
+		case "BP":
+			isLegal = BlackPawnMoveLegal ();
+			break;
+		}
+
+		return isLegal;
+
 	}
 	bool CheckIfWhiteMates() {
 		return false;
@@ -666,6 +693,7 @@ public class GameManager : MonoBehaviour {
 	}
 	#endregion
 	#region white legal moves
+	#region white rook legal functions
 	bool WhiteRookMoveLegal () {
 		string selectSquare;
 		int selectCol, selectRow;
@@ -674,8 +702,87 @@ public class GameManager : MonoBehaviour {
 		string destArea;
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
-		return true;
+
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test1 = false;
+
+		test1 = WhiteRookTest1(selectRow, selectCol, destRow, destCol);
+
+		return test1;
 	}
+	bool WhiteRookTest1(int selectRow, int selectCol, int destRow, int destCol) {
+		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
+
+		// if rook wants to move up
+		if (selectCol == destCol && selectRow > destRow) {
+			for (int row = -1; row + selectRow > destRow - 1; row--) {
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'W') { // if you find a white piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'B') { // if you find a black piece along the way, but you are still not at destination then return false else true;
+					if (selectRow + row == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// if rook wants to move down
+		if (selectCol == destCol && selectRow < destRow) {
+			for (int row = 1; row + selectRow < destRow + 1; row++) {
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'W') { // if you find a white piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'B') { // if you find a black piece along the way, but you are still not at destination then return false else true;
+					if (selectRow + row == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// if rook wants to move right
+		if (selectRow == destRow && selectCol < destCol) {
+			for (int col = 1; col + selectCol < destCol + 1; col++) {
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { // if you find a white piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { // if you find a black piece along the way, but you are still not at destination then return false else true;
+					if (selectCol + col == destCol) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// if rook wants to move left
+		if (selectRow == destRow && selectCol > destCol) {
+			for (int col = -1; col + selectCol > destCol - 1; col--) {
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { // if you find a white piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { // if you find a black piece along the way, but you are still not at destination then return false else true;
+					if (selectCol + col == destCol) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	#endregion
+	#region white knight legal functions
 	bool WhiteKnightMoveLegal () {
 		string selectSquare;
 		int selectCol, selectRow;
@@ -684,8 +791,85 @@ public class GameManager : MonoBehaviour {
 		string destArea;
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
-		return true;
+
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test1 = false;
+
+		test1 = WhiteKnightTest1 (selectRow, selectCol, destRow, destCol);
+		return test1;
 	}
+	bool WhiteKnightTest1 (int selectRow, int selectCol, int destRow, int destCol) {
+		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
+		// Knight wants to move 2 up and 1 left
+		if ((selectRow - destRow == 2) && (selectCol - destCol == 1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 2 up and 1 right
+		if ((selectRow - destRow == 2) && (selectCol - destCol == -1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 1 up and 2 right
+		if ((selectRow - destRow == 1) && (selectCol - destCol == -2)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 1 down and 2 right
+		if ((selectRow - destRow == -1) && (selectCol - destCol == -2)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 2 down and 1 right
+		if ((selectRow - destRow == -2) && (selectCol - destCol == -1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 2 down and 1 left
+		if ((selectRow - destRow == -2) && (selectCol - destCol == 1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 1 down and 2 left
+		if ((selectRow - destRow == -1) && (selectCol - destCol == 2)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 1 up and 2 left
+		if ((selectRow - destRow == 1) && (selectCol - destCol == 2)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		return false;
+	}
+	#endregion
+	#region white bishop legal functions
 	bool WhiteBishopMoveLegal () {
 		string selectSquare;
 		int selectCol, selectRow;
@@ -694,8 +878,90 @@ public class GameManager : MonoBehaviour {
 		string destArea;
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
-		return true;
+
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test1 = false;
+
+		test1 = WhiteBishopTest1 (selectRow, selectCol, destRow, destCol);
+		return test1;
+
 	}
+	bool WhiteBishopTest1 (int selectRow, int selectCol, int destRow, int destCol) {
+		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
+
+		bool rowUp = selectRow - destRow > 0;
+		bool colLeft = selectCol - destCol > 0; 
+
+		// Bishop wants to move diagonaly up and left
+		if ((selectRow - destRow == selectCol - destCol) && rowUp && colLeft) {
+			for (int rowDiag = -1, colDiag = -1; selectRow + rowDiag > destRow - 1; rowDiag--, colDiag--) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// Bishop wants to move diagonaly up and right
+		if (selectRow - destRow == (-1 * (selectCol - destCol)) && rowUp && !colLeft) {
+			for (int rowDiag = -1, colDiag = 1; selectRow + rowDiag > destRow - 1; rowDiag--, colDiag++) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// Bishop wants to move diagonaly down and right
+		if ((selectRow - destRow == selectCol - destCol) && !rowUp && !colLeft) {
+			for (int rowDiag = 1, colDiag = 1; selectRow + rowDiag < destRow + 1 ; rowDiag++, colDiag++) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// Bishop wants to move diagonaly down and left
+		if ((-1 * (selectRow - destRow) == selectCol - destCol) && !rowUp && colLeft) {
+			for (int rowDiag = 1, colDiag = -1; selectRow + rowDiag < destRow + 1; rowDiag++, colDiag--) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	#endregion
+	#region white legal move functions
 	bool WhiteQueenMoveLegal () {
 		string selectSquare;
 		int selectCol, selectRow;
@@ -704,8 +970,154 @@ public class GameManager : MonoBehaviour {
 		string destArea;
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
-		return true;
+
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test1 = false;
+
+		test1 = WhiteQueenTest1(selectRow, selectCol, destRow, destCol);
+
+		return test1;
 	}
+	bool WhiteQueenTest1(int selectRow, int selectCol, int destRow, int destCol) {
+		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
+
+		// if queen wants to move up
+		if (selectCol == destCol && selectRow > destRow) {
+			for (int row = -1; row + selectRow > destRow - 1; row--) {
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'W') { // if you find a white piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'B') { // if you find a black piece along the way, but you are still not at destination then return false else true;
+					if (selectRow + row == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// if queen wants to move down
+		if (selectCol == destCol && selectRow < destRow) {
+			for (int row = 1; row + selectRow < destRow + 1; row++) {
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'W') { // if you find a white piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'B') { // if you find a black piece along the way, but you are still not at destination then return false else true;
+					if (selectRow + row == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// if queen wants to move right
+		if (selectRow == destRow && selectCol < destCol) {
+			for (int col = 1; col + selectCol < destCol + 1; col++) {
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { // if you find a white piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { // if you find a black piece along the way, but you are still not at destination then return false else true;
+					if (selectCol + col == destCol) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// if queen wants to move left
+		if (selectRow == destRow && selectCol > destCol) {
+			for (int col = -1; col + selectCol > destCol - 1; col--) {
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { // if you find a white piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { // if you find a black piece along the way, but you are still not at destination then return false else true;
+					if (selectCol + col == destCol) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		bool rowUp = selectRow - destRow > 0;
+		bool colLeft = selectCol - destCol > 0; 
+
+		// Queen wants to move diagonaly up and left
+		if ((selectRow - destRow == selectCol - destCol) && rowUp && colLeft) {
+			for (int rowDiag = -1, colDiag = -1; selectRow + rowDiag > destRow - 1; rowDiag--, colDiag--) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// Queen wants to move diagonaly up and right
+		if (selectRow - destRow == (-1 * (selectCol - destCol)) && rowUp && !colLeft) {
+			for (int rowDiag = -1, colDiag = 1; selectRow + rowDiag > destRow - 1; rowDiag--, colDiag++) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// Queen wants to move diagonaly down and right
+		if ((selectRow - destRow == selectCol - destCol) && !rowUp && !colLeft) {
+			for (int rowDiag = 1, colDiag = 1; selectRow + rowDiag < destRow + 1 ; rowDiag++, colDiag++) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// Queen wants to move diagonaly down and left
+		if ((-1 * (selectRow - destRow) == selectCol - destCol) && !rowUp && colLeft) {
+			for (int rowDiag = 1, colDiag = -1; selectRow + rowDiag < destRow + 1; rowDiag++, colDiag--) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	#endregion
+	#region white king legal functions
 	bool WhiteKingMoveLegal () {
 		string selectSquare;
 		int selectCol, selectRow;
@@ -714,8 +1126,84 @@ public class GameManager : MonoBehaviour {
 		string destArea;
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
-		return true;
+
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test1 = false;
+
+		test1 = WhiteKingTest1 (selectRow, selectCol, destRow, destCol);
+		return test1;
 	}
+	bool WhiteKingTest1 (int selectRow, int selectCol, int destRow, int destCol) {
+		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
+		// King wants to move 1 up and 1 left
+		if ((selectRow - destRow == 1) && (selectCol - destCol == 1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 up
+		if ((selectRow - destRow == 1) && (selectCol - destCol == 0)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 up and 1 right
+		if ((selectRow - destRow == 1) && (selectCol - destCol == -1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 right
+		if ((selectRow - destRow == 0) && (selectCol - destCol == -1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 right and 1 down
+		if ((selectRow - destRow == -1) && (selectCol - destCol == -1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 down
+		if ((selectRow - destRow == -1) && (selectCol - destCol == 0)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 left and 1 down
+		if ((selectRow - destRow == -1) && (selectCol - destCol == 1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 left
+		if ((selectRow - destRow == 0) && (selectCol - destCol == 1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		return false;
+	}
+	#endregion
 	#region White pawn legal functions
 	bool WhitePawnMoveLegal () {
 		string selectSquare;
@@ -761,6 +1249,570 @@ public class GameManager : MonoBehaviour {
 				return false;
 			}
 		}
+		// TODO en-passant
+		return false;
+	}
+	#endregion
+	#endregion
+
+	#region black legal moves
+	#region black rook legal function
+	bool BlackRookMoveLegal () {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test1 = false;
+
+		test1 = BlackRookTest1(selectRow, selectCol, destRow, destCol);
+
+		return test1;
+	}
+	bool BlackRookTest1(int selectRow, int selectCol, int destRow, int destCol) {
+		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
+
+		// if rook wants to move up
+		if (selectCol == destCol && selectRow > destRow) {
+			for (int row = -1; row + selectRow > destRow - 1; row--) {
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'B') { // if you find a Black piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'W') { // if you find a white piece along the way, but you are still not at destination then return false else true;
+					if (selectRow + row == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// if rook wants to move down
+		if (selectCol == destCol && selectRow < destRow) {
+			for (int row = 1; row + selectRow < destRow + 1; row++) {
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'B') { // if you find a black piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'W') { // if you find a white piece along the way, but you are still not at destination then return false else true;
+					if (selectRow + row == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// if rook wants to move right
+		if (selectRow == destRow && selectCol < destCol) {
+			for (int col = 1; col + selectCol < destCol + 1; col++) {
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { // if you find a black piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { // if you find a white piece along the way, but you are still not at destination then return false else true;
+					if (selectCol + col == destCol) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// if rook wants to move left
+		if (selectRow == destRow && selectCol > destCol) {
+			for (int col = -1; col + selectCol > destCol - 1; col--) {
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { // if you find a black piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { // if you find a white piece along the way, but you are still not at destination then return false else true;
+					if (selectCol + col == destCol) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	#endregion
+	#region black knight legal functions
+	bool BlackKnightMoveLegal () {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test1 = false;
+
+		test1 = BlackKnightTest1 (selectRow, selectCol, destRow, destCol);
+		return test1;
+	}
+	bool BlackKnightTest1 (int selectRow, int selectCol, int destRow, int destCol) {
+		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
+		// Knight wants to move 2 up and 1 left
+		if ((selectRow - destRow == 2) && (selectCol - destCol == 1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 2 up and 1 right
+		if ((selectRow - destRow == 2) && (selectCol - destCol == -1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 1 up and 2 right
+		if ((selectRow - destRow == 1) && (selectCol - destCol == -2)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 1 down and 2 right
+		if ((selectRow - destRow == -1) && (selectCol - destCol == -2)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 2 down and 1 right
+		if ((selectRow - destRow == -2) && (selectCol - destCol == -1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 2 down and 1 left
+		if ((selectRow - destRow == -2) && (selectCol - destCol == 1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 1 down and 2 left
+		if ((selectRow - destRow == -1) && (selectCol - destCol == 2)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// Knight wants to move 1 up and 2 left
+		if ((selectRow - destRow == 1) && (selectCol - destCol == 2)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		return false;
+	}
+	#endregion
+	#region black bishop legal functions
+	bool BlackBishopMoveLegal () {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test1 = false;
+
+		test1 = BlackBishopTest1 (selectRow, selectCol, destRow, destCol);
+		return test1;
+
+	}
+	bool BlackBishopTest1 (int selectRow, int selectCol, int destRow, int destCol) {
+		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
+
+		bool rowUp = selectRow - destRow > 0;
+		bool colLeft = selectCol - destCol > 0; 
+
+		// Bishop wants to move diagonaly up and left
+		if ((selectRow - destRow == selectCol - destCol) && rowUp && colLeft) {
+			for (int rowDiag = -1, colDiag = -1; selectRow + rowDiag > destRow - 1; rowDiag--, colDiag--) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// Bishop wants to move diagonaly up and right
+		if (selectRow - destRow == (-1 * (selectCol - destCol)) && rowUp && !colLeft) {
+			for (int rowDiag = -1, colDiag = 1; selectRow + rowDiag > destRow - 1; rowDiag--, colDiag++) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// Bishop wants to move diagonaly down and right
+		if ((selectRow - destRow == selectCol - destCol) && !rowUp && !colLeft) {
+			for (int rowDiag = 1, colDiag = 1; selectRow + rowDiag < destRow + 1 ; rowDiag++, colDiag++) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// Bishop wants to move diagonaly down and left
+		if ((-1 * (selectRow - destRow) == selectCol - destCol) && !rowUp && colLeft) {
+			for (int rowDiag = 1, colDiag = -1; selectRow + rowDiag < destRow + 1; rowDiag++, colDiag--) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	#endregion
+	#region black legal move functions
+	bool BlackQueenMoveLegal () {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test1 = false;
+
+		test1 = BlackQueenTest1(selectRow, selectCol, destRow, destCol);
+
+		return test1;
+	}
+	bool BlackQueenTest1(int selectRow, int selectCol, int destRow, int destCol) {
+		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
+
+		// if queen wants to move up
+		if (selectCol == destCol && selectRow > destRow) {
+			for (int row = -1; row + selectRow > destRow - 1; row--) {
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'B') { // if you find a black piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'W') { // if you find a white piece along the way, but you are still not at destination then return false else true;
+					if (selectRow + row == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// if queen wants to move down
+		if (selectCol == destCol && selectRow < destRow) {
+			for (int row = 1; row + selectRow < destRow + 1; row++) {
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'B') { // if you find a black piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow + row, destCol] [0] == 'W') { // if you find a white piece along the way, but you are still not at destination then return false else true;
+					if (selectRow + row == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// if queen wants to move right
+		if (selectRow == destRow && selectCol < destCol) {
+			for (int col = 1; col + selectCol < destCol + 1; col++) {
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { // if you find a black piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { // if you find a white piece along the way, but you are still not at destination then return false else true;
+					if (selectCol + col == destCol) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// if queen wants to move left
+		if (selectRow == destRow && selectCol > destCol) {
+			for (int col = -1; col + selectCol > destCol - 1; col--) {
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { // if you find a black piece along the way, automatic false;
+					return false;
+				}
+				if (piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { // if you find a white piece along the way, but you are still not at destination then return false else true;
+					if (selectCol + col == destCol) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		bool rowUp = selectRow - destRow > 0;
+		bool colLeft = selectCol - destCol > 0; 
+
+		// Queen wants to move diagonaly up and left
+		if ((selectRow - destRow == selectCol - destCol) && rowUp && colLeft) {
+			for (int rowDiag = -1, colDiag = -1; selectRow + rowDiag > destRow - 1; rowDiag--, colDiag--) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// Queen wants to move diagonaly up and right
+		if (selectRow - destRow == (-1 * (selectCol - destCol)) && rowUp && !colLeft) {
+			for (int rowDiag = -1, colDiag = 1; selectRow + rowDiag > destRow - 1; rowDiag--, colDiag++) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// Queen wants to move diagonaly down and right
+		if ((selectRow - destRow == selectCol - destCol) && !rowUp && !colLeft) {
+			for (int rowDiag = 1, colDiag = 1; selectRow + rowDiag < destRow + 1 ; rowDiag++, colDiag++) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		// Queen wants to move diagonaly down and left
+		if ((-1 * (selectRow - destRow) == selectCol - destCol) && !rowUp && colLeft) {
+			for (int rowDiag = 1, colDiag = -1; selectRow + rowDiag < destRow + 1; rowDiag++, colDiag--) {
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'B') {
+					return false;
+				}
+				if (piecesOnBoard [selectRow + rowDiag, selectCol + colDiag] [0] == 'W') {
+					if (selectRow + rowDiag == destRow) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	#endregion
+	#region black king legal functions
+	bool BlackKingMoveLegal () {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test1 = false;
+
+		test1 = BlackKingTest1 (selectRow, selectCol, destRow, destCol);
+		return test1;
+	}
+	bool BlackKingTest1 (int selectRow, int selectCol, int destRow, int destCol) {
+		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
+		// King wants to move 1 up and 1 left
+		if ((selectRow - destRow == 1) && (selectCol - destCol == 1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 up
+		if ((selectRow - destRow == 1) && (selectCol - destCol == 0)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 up and 1 right
+		if ((selectRow - destRow == 1) && (selectCol - destCol == -1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 right
+		if ((selectRow - destRow == 0) && (selectCol - destCol == -1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 right and 1 down
+		if ((selectRow - destRow == -1) && (selectCol - destCol == -1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 down
+		if ((selectRow - destRow == -1) && (selectCol - destCol == 0)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 left and 1 down
+		if ((selectRow - destRow == -1) && (selectCol - destCol == 1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to move 1 left
+		if ((selectRow - destRow == 0) && (selectCol - destCol == 1)) {
+			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		return false;
+	}
+	#endregion
+	#region Black pawn legal functions
+	bool BlackPawnMoveLegal () {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test1 = false;
+
+		test1 = BlackPawnTest1 (selectRow, selectCol, destRow, destCol);
+		return test1;
+	}
+	bool BlackPawnTest1 (int selectRow, int selectCol, int destRow, int destCol)
+	{
+		if (selectRow == 1 && destRow == 3 && selectCol == destCol) {
+			if (boardPositions [plyMove].piecesOnBoard [selectRow + 1, destCol] == "--" && boardPositions [plyMove].piecesOnBoard [selectRow + 2, destCol] == "--") {
+				return true;
+			} else {
+				return false;
+			}
+
+		}
+		if (selectCol == destCol && (selectRow - destRow == -1)) {
+			return true;
+		}
+		if ((destCol == selectCol - 1) && (destRow == selectRow + 1)) {
+			if (boardPositions [plyMove].piecesOnBoard [destRow, destCol] [0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		if ((destCol == selectCol + 1) && (destRow == selectRow + 1)) {
+			if (boardPositions [plyMove].piecesOnBoard [destRow, destCol] [0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// TODO en-passant
 		return false;
 	}
 	#endregion
