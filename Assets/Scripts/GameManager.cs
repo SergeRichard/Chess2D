@@ -21,12 +21,15 @@ public class GameManager : MonoBehaviour {
 		CheckIfBlackMatesState, 
 		CheckIfBlackStaleMatesState,
 		MoveBlackPieceState,
-		ResultState
+		GameDrawn,
+		WhiteWon,
+		BlackWon
 	};
 	enum InputState {
 		WaitingForClick,
 		SquareIsClicked
 	}
+
 	InputState inputState = InputState.WaitingForClick;
 	static string clickedSquareName = "";
 	static string selectionSquareName = "";
@@ -119,8 +122,14 @@ public class GameManager : MonoBehaviour {
 			case State.MoveBlackPieceState:
 				MoveBlackPieceState ();
 				break;
-			case State.ResultState:
-				ResultState ();
+			case State.WhiteWon:
+				WhiteWon ();
+				break;
+			case State.BlackWon:
+				BlackWon ();
+				break;
+			case State.GameDrawn:
+				GameDrawn ();
 				break;
 			default:
 				Debug.LogError("Invalid State.");
@@ -186,7 +195,7 @@ public class GameManager : MonoBehaviour {
 		Debug.Log ("Inside CheckIfWhiteMatesState");
 		bool mates = CheckIfWhiteMates ();
 		if (mates) {
-			state = State.ResultState;
+			state = State.WhiteWon;
 			DirectToState ();
 		} else {
 			state = State.CheckIfWhiteStaleMatesState;
@@ -197,7 +206,7 @@ public class GameManager : MonoBehaviour {
 		Debug.Log ("Inside CheckIfWhiteStaleMatesState");
 		bool staleMates = CheckIfWhiteHasStaleMated ();
 		if (staleMates) {
-			state = State.ResultState;
+			state = State.GameDrawn;
 
 		} else {
 			state = State.BlackSelectionState;
@@ -251,7 +260,7 @@ public class GameManager : MonoBehaviour {
 		Debug.Log ("Inside CheckIfBlackMatesState");
 		bool mates = CheckIfBlackMates ();
 		if (mates) {
-			state = State.ResultState;
+			state = State.BlackWon;
 			DirectToState ();
 		} else {
 			state = State.CheckIfBlackStaleMatesState;
@@ -262,7 +271,7 @@ public class GameManager : MonoBehaviour {
 		Debug.Log ("Inside CheckIfBlackStaleMatesState");
 		bool staleMates = CheckIfBlackHasStaleMated ();
 		if (staleMates) {
-			state = State.ResultState;
+			state = State.GameDrawn;
 
 		} else {
 			state = State.WhiteSelectionState;
@@ -270,19 +279,34 @@ public class GameManager : MonoBehaviour {
 		DirectToState ();
 	}
 
-	void ResultState() {
-		Debug.Log ("Inside ResultState");
-
+	void GameDrawn() {
+		Debug.Log ("Inside GameDrawn");
 	}
+	void WhiteWon() {
+		Debug.Log ("Inside WhiteWon");
+	}
+	void BlackWon() {
+		Debug.Log ("Inside BlackWon");
+	}
+
 	#endregion
 	#region Events
 	public void SquareClicked(string squareName) {
 		Debug.Log (squareName + " clicked!");
-		clickedSquareName = squareName;
-		inputState = InputState.SquareIsClicked;
+		if (!(state == State.BlackWon || state == State.WhiteWon || state == State.GameDrawn)) {
+			clickedSquareName = squareName;
+			inputState = InputState.SquareIsClicked;
+			DirectToState ();
+		}
+	}
+	public void WhiteFlags() {
+		state = State.BlackWon;
 		DirectToState ();
 	}
-
+	public void BlackFlags() {
+		state = State.WhiteWon;
+		DirectToState ();
+	}
 	#endregion
 	#region helper functions
 	void MovePieceToDestination() {
@@ -290,40 +314,54 @@ public class GameManager : MonoBehaviour {
 		string temp = "";
 		string textNotation = GetMoveTextNotation();
 
+		// copy all of the board to the tempBoard
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
-				tempBoard[col,row] = boardPositions[plyMove].piecesOnBoard [col, row];
+				tempBoard[row,col] = boardPositions[plyMove].piecesOnBoard [row, col];
 
 			}
 		}
+
 		// find the selection square and assign an empty space to it
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
-				if (selectionSquareName == squareNames [col, row]) {
-					temp = tempBoard[col,row];
-					tempBoard [col, row] = "--"; 
+				if (selectionSquareName == squareNames [row, col]) {
+					temp = tempBoard[row,col];
+					tempBoard [row, col] = "--"; 
 				}
 			}
 		}
 		// Find the destination square and assign the the temp variable holding the selection piece to the destination square.
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
-				if (destinationSquareName == squareNames [col, row]) {
-					tempBoard [col, row] = temp; 
+				if (destinationSquareName == squareNames [row, col]) {
+					tempBoard [row, col] = temp; 
 				}
 			}
 		}
+		// Modify board if castling
+		if (WhiteQueenSideCastling ()) {
+
+
+		}
+		if (WhiteKingSideCastling ()) {
+
+		}
+
 		// create text notation before plyMove++
 
 		//Debug.Log ("Move: " + textNotation);
 
+
+		bool kingSideCastling = plyMove == 0 ? true : boardPositions [plyMove].kingSideCastling;
+		bool queenSideCastling = plyMove == 0 ? true : boardPositions [plyMove].queenSideCastling;
 		plyMove++;
-		BoardPosition boardPosition = new BoardPosition (plyMove, textNotation);
+		BoardPosition boardPosition = new BoardPosition (plyMove, textNotation, queenSideCastling, kingSideCastling);
 		boardPosition.piecesOnBoard = new string[8, 8];
 
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
-				boardPosition.piecesOnBoard[col, row] = tempBoard [col, row];
+				boardPosition.piecesOnBoard[row, col] = tempBoard [row, col];
 			}
 		}
 		boardPositions.Add (boardPosition);
@@ -331,13 +369,26 @@ public class GameManager : MonoBehaviour {
 		RemoveAllPieces ();
 		UpdateBoard ();
 	}
+	bool WhiteQueenSideCastling() {
+		return true;
+	}
+	bool WhiteKingSideCastling() {
+		return true;
+	}
+	bool BlackQueenSideCastling() {
+		return true;
+
+	}
+	bool BlackKingSideCastling() {
+		return true;
+	}
 	string GetMoveTextNotation() {
 		string notation = string.Empty;
 
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
-				if (selectionSquareName == squareNames [col, row]) {
-					notation += FormatSelectionPartOfNotation (squareNames, col, row);
+				if (selectionSquareName == squareNames [row, col]) {
+					notation += FormatSelectionPartOfNotation (squareNames, row, col);
 				}
 			}
 		}
@@ -357,8 +408,8 @@ public class GameManager : MonoBehaviour {
 
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
-				if (squareNames [col, row] == destinationSquareName) {
-					return boardPositions [plyMove].piecesOnBoard [col, row] == "--";
+				if (squareNames [row, col] == destinationSquareName) {
+					return boardPositions [plyMove].piecesOnBoard [row, col] == "--";
 				}
 			}
 
@@ -368,11 +419,10 @@ public class GameManager : MonoBehaviour {
 	bool PieceIsAttacking() {
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
-				if (squareNames [col, row] == destinationSquareName) {
-					return boardPositions [plyMove].piecesOnBoard [col, row] != "--";
+				if (squareNames [row, col] == destinationSquareName) {
+					return boardPositions [plyMove].piecesOnBoard [row, col] != "--";
 				}
 			}
-
 		}
 		return false;
 	}
@@ -390,7 +440,6 @@ public class GameManager : MonoBehaviour {
 					notation += "  ";
 				}
 
-
 				notation += bp.moveNotation + (counter%2==0 ? "" : "   ");
 				counter++;
 			}
@@ -398,10 +447,10 @@ public class GameManager : MonoBehaviour {
 		//Debug.Log (notation);
 		moveNotationText.text = notation;
 	}
-	string FormatSelectionPartOfNotation(string[,] squares, int col, int row) {
+	string FormatSelectionPartOfNotation(string[,] squares, int row, int col) {
 		string notation = string.Empty;
-		string piece = boardPositions [plyMove].piecesOnBoard [col, row];
-		string square = squares [col, row];
+		string piece = boardPositions [plyMove].piecesOnBoard [row, col];
+		string square = squares [row, col];
 
 		// add piece letter to beginning of notation (unless it's a pawn)
 		switch (piece) {
@@ -442,7 +491,7 @@ public class GameManager : MonoBehaviour {
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
 				// "--" means it's an uninhabited square
-				if (boardPositions[plyMove].piecesOnBoard[col,row] != "--") {
+				if (boardPositions[plyMove].piecesOnBoard[row,col] != "--") {
 					Transform squareTransform = FindPosition (row, col);
 					GameObject piecePrefab = FindPrefab (row, col, plyMove);
 					GameObject piece = Instantiate (piecePrefab, squareTransform.position, Quaternion.identity) as GameObject;
@@ -467,9 +516,64 @@ public class GameManager : MonoBehaviour {
 		}
 	}
 	bool CheckIfWhitesMoveIsLegal()	{
-		return true;
+		// TODO: figure out piece that is moving and where to. Check each piece either through seperate classes or functions and determine if legal.
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		bool isLegal = false;
+
+		switch (selectSquare) {
+		case "WR":
+			isLegal = WhiteRookMoveLegal ();
+			break;
+		case "WN":
+			isLegal = WhiteKnightMoveLegal ();
+			break;
+		case "WB":
+			isLegal = WhiteBishopMoveLegal ();
+			break;
+		case "WQ":
+			isLegal = WhiteQueenMoveLegal ();
+			break;
+		case "WK":
+			isLegal = WhiteKingMoveLegal ();
+			break;
+		case "WP":
+			isLegal = WhitePawnMoveLegal ();
+			break;
+		}
+
+		return isLegal;
+	}
+
+	void CopyBoardToTemp (out string[,] tempBoard) {
+		tempBoard = new string[8,8];
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				tempBoard[row,col] = boardPositions [plyMove].piecesOnBoard [row, col];
+			}
+		}
+
+	}
+	void FindPieceOrSpaceAndLocationOnSquare(string squareName, out string piece, out int row, out int col) {
+		col = 0;
+		row = 0;
+		piece = string.Empty;
+		for (int r = 0; r < 8; r++) {
+			for (int c = 0; c < 8; c++) {
+				if (squareNames[r,c] == squareName) {
+					row = r;
+					col = c;
+					piece = boardPositions [plyMove].piecesOnBoard [r, c];
+				}
+
+			}
+		}
+
 	}
 	bool CheckIfBlacksMoveIsLegal() {
+		// TODO: figure out piece that is moving and where to. Check each piece either through seperate classes or functions and determine if legal.
 		return true;
 	}
 	bool CheckIfWhiteMates() {
@@ -503,7 +607,7 @@ public class GameManager : MonoBehaviour {
 	void GetSquareTransforms()	{
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
-				string squareName = squareNames [col, row];
+				string squareName = squareNames [row, col];
 				Transform t = GameObject.Find (squareName).transform;
 				Square square = new Square (t, squareName);
 				squares.Add (square);
@@ -514,7 +618,7 @@ public class GameManager : MonoBehaviour {
 
 	void InitializeBoard() {
 		//Instantiate (piecesPrefab [0], new Vector3 (0, 0, 0), Quaternion.identity);
-		BoardPosition boardPosition = new BoardPosition(plyMove, "");
+		BoardPosition boardPosition = new BoardPosition(plyMove, "", true, true);
 		boardPosition.piecesOnBoard = new string[,] { 
 			{"BR","BN","BB","BQ","BK","BB","BN","BR"},
 			{"BP","BP","BP","BP","BP","BP","BP","BP"},
@@ -530,7 +634,7 @@ public class GameManager : MonoBehaviour {
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
 				// "--" means it's an uninhabited square
-				if (boardPositions[plyMove].piecesOnBoard[col,row] != "--") {
+				if (boardPositions[plyMove].piecesOnBoard[row,col] != "--") {
 					Transform squareTransform = FindPosition (row, col);
 					GameObject piecePrefab = FindPrefab (row, col, plyMove);
 					GameObject piece = Instantiate (piecePrefab, squareTransform.position, Quaternion.identity) as GameObject;
@@ -544,7 +648,7 @@ public class GameManager : MonoBehaviour {
 	Transform FindPosition(int row, int column) {
 		// TODO find square with matching squareNames name, then return the transform of the square.
 		foreach (var square in squares) {
-			if (squareNames[column,row] == square.name) {
+			if (squareNames[row,column] == square.name) {
 				return square.squareTransform;
 			}
 
@@ -554,11 +658,111 @@ public class GameManager : MonoBehaviour {
 	GameObject FindPrefab(int row, int column, int plyMove)
 	{
 		foreach (var p in piecesPrefab) {
-			if (p.GetComponent<Piece> ().shortName == boardPositions[plyMove].piecesOnBoard [column, row]) {
+			if (p.GetComponent<Piece> ().shortName == boardPositions[plyMove].piecesOnBoard [row, column]) {
 				return p;
 			}
 		}
 		return null;
 	}
+	#endregion
+	#region white legal moves
+	bool WhiteRookMoveLegal () {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+		return true;
+	}
+	bool WhiteKnightMoveLegal () {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+		return true;
+	}
+	bool WhiteBishopMoveLegal () {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+		return true;
+	}
+	bool WhiteQueenMoveLegal () {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+		return true;
+	}
+	bool WhiteKingMoveLegal () {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+		return true;
+	}
+	#region White pawn legal functions
+	bool WhitePawnMoveLegal () {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test1 = false;
+
+		test1 = WhitePawnTest1 (selectRow, selectCol, destRow, destCol);
+		return test1;
+	}
+	bool WhitePawnTest1 (int selectRow, int selectCol, int destRow, int destCol)
+	{
+		if (selectRow == 6 && destRow == 4 && selectCol == destCol) {
+			if (boardPositions [plyMove].piecesOnBoard [selectRow - 1, destCol] == "--" && boardPositions [plyMove].piecesOnBoard [selectRow - 2, destCol] == "--") {
+				return true;
+			} else {
+				return false;
+			}
+				
+		}
+		if (selectCol == destCol && (selectRow - destRow == 1)) {
+			return true;
+		}
+		if ((destCol == selectCol - 1) && (destRow == selectRow - 1)) {
+			if (boardPositions [plyMove].piecesOnBoard [destRow, destCol] [0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		if ((destCol == selectCol + 1) && (destRow == selectRow - 1)) {
+			if (boardPositions [plyMove].piecesOnBoard [destRow, destCol] [0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		return false;
+	}
+	#endregion
 	#endregion
 }

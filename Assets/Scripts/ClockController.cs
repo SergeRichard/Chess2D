@@ -11,6 +11,7 @@ public class ClockController : MonoBehaviour {
 	public int hoursForBlack;
 	public int minutesForBlack;
 	public float secondsForBlack;
+	public GameManager gameManager;
 
 	public Text TimeWhiteText;
 	public Text TimeBlackText;
@@ -52,15 +53,17 @@ public class ClockController : MonoBehaviour {
 		}
 	}
 	#region helper methods
-	void ShowThatWhiteHasFlagged() {
+	void ShowThatWhiteHasFlagged() {		
 		TimeWhiteText.color = Color.red;
 		TimeWhiteText.text = "Time";
-
+		gameManager.WhiteFlags ();
+		clockState = StartClockState.Wait;
 	}
 	void ShowThatBlackHasFlagged() {
 		TimeBlackText.color = Color.red;
 		TimeBlackText.text = "Time";
-
+		gameManager.BlackFlags ();
+		clockState = StartClockState.Wait;
 	}
 	void CalculateTimeForWhite()
 	{
@@ -77,6 +80,7 @@ public class ClockController : MonoBehaviour {
 		}
 		if (hoursForWhite < 0) {
 			clockState = StartClockState.WhiteFlags;
+
 		}
 	}
 	void CalculateTimeForBlack()
