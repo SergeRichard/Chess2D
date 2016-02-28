@@ -340,23 +340,37 @@ public class GameManager : MonoBehaviour {
 			}
 		}
 		// Modify board if castling
-		if (WhiteQueenSideCastling ()) {
+		if (state == State.MoveWhitePieceState) {
+			if (WhiteQueenSideCastling ()) {
+				tempBoard [7, 0] = "--";
+				tempBoard [7, 3] = "WR";
 
+			}
+			if (WhiteKingSideCastling ()) {
+				tempBoard [7, 7] = "--";
+				tempBoard [7, 5] = "WR";
+			}
+		}
+		if (state == State.MoveBlackPieceState) {
+			if (BlackQueenSideCastling ()) {
+				tempBoard [0, 0] = "--";
+				tempBoard [0, 3] = "BR";
+
+			}
+			if (BlackKingSideCastling ()) {
+				tempBoard [0, 7] = "--";
+				tempBoard [0, 5] = "BR";
+			}
 
 		}
-		if (WhiteKingSideCastling ()) {
-
-		}
-
 		// create text notation before plyMove++
 
 		//Debug.Log ("Move: " + textNotation);
 
 
-		bool kingSideCastling = plyMove == 0 ? true : boardPositions [plyMove].kingSideCastling;
-		bool queenSideCastling = plyMove == 0 ? true : boardPositions [plyMove].queenSideCastling;
+
 		plyMove++;
-		BoardPosition boardPosition = new BoardPosition (plyMove, textNotation, queenSideCastling, kingSideCastling);
+		BoardPosition boardPosition = new BoardPosition (plyMove, textNotation);
 		boardPosition.piecesOnBoard = new string[8, 8];
 
 		for (int row = 0; row < 8; row++) {
@@ -370,17 +384,73 @@ public class GameManager : MonoBehaviour {
 		UpdateBoard ();
 	}
 	bool WhiteQueenSideCastling() {
-		return true;
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		if (selectRow == 7 && selectCol == 4 && destRow == 7 && destCol == 2 && BoardPosition.whiteQueenSideCastling) {
+			if (selectSquare == "WK") {
+				return true;
+			}
+		}
+
+		return false;
 	}
 	bool WhiteKingSideCastling() {
-		return true;
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		if (selectRow == 7 && selectCol == 4 && destRow == 7 && destCol == 6 && BoardPosition.whiteKingSideCastling) {
+			if (selectSquare == "WK") {
+				return true;
+			}
+		}
+
+		return false;
 	}
 	bool BlackQueenSideCastling() {
-		return true;
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		if (selectRow == 0 && selectCol == 4 && destRow == 0 && destCol == 2 && BoardPosition.whiteQueenSideCastling) {
+			if (selectSquare == "BK") {
+				return true;
+			}
+		}
+
+		return false;
 
 	}
 	bool BlackKingSideCastling() {
-		return true;
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		if (selectRow == 0 && selectCol == 4 && destRow == 0 && destCol == 6 && BoardPosition.whiteKingSideCastling) {
+			if (selectSquare == "BK") {
+				return true;
+			}
+		}
+
+		return false;
 	}
 	string GetMoveTextNotation() {
 		string notation = string.Empty;
@@ -645,7 +715,7 @@ public class GameManager : MonoBehaviour {
 
 	void InitializeBoard() {
 		//Instantiate (piecesPrefab [0], new Vector3 (0, 0, 0), Quaternion.identity);
-		BoardPosition boardPosition = new BoardPosition(plyMove, "", true, true);
+		BoardPosition boardPosition = new BoardPosition(plyMove, "");
 		boardPosition.piecesOnBoard = new string[,] { 
 			{"BR","BN","BB","BQ","BK","BB","BN","BR"},
 			{"BP","BP","BP","BP","BP","BP","BP","BP"},
@@ -1196,6 +1266,23 @@ public class GameManager : MonoBehaviour {
 		// King wants to move 1 left
 		if ((selectRow - destRow == 0) && (selectCol - destCol == 1)) {
 			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'B') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to castle king side
+		if (selectRow == 7 && selectCol == 4 && destRow == 7 && destCol == 6) {
+			if (piecesOnBoard [selectRow, selectCol + 1] == "--" && piecesOnBoard [selectRow, selectCol + 2] == "--" && piecesOnBoard [selectRow, selectCol + 3] == "WR" && BoardPosition.whiteKingSideCastling) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to castle queen side
+		if (selectRow == 7 && selectCol == 4 && destRow == 7 && destCol == 2) {
+			if (piecesOnBoard [selectRow, selectCol - 1] == "--" && piecesOnBoard [selectRow, selectCol - 2] == "--" 
+				&& piecesOnBoard[selectRow, selectCol - 3] == "--" && piecesOnBoard [selectRow, selectCol - 4] == "WR" && BoardPosition.whiteQueenSideCastling) {
 				return true;
 			} else {
 				return false;
@@ -1759,6 +1846,23 @@ public class GameManager : MonoBehaviour {
 		// King wants to move 1 left
 		if ((selectRow - destRow == 0) && (selectCol - destCol == 1)) {
 			if (piecesOnBoard [destRow, destCol] == "--" || piecesOnBoard [destRow, destCol][0] == 'W') {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to castle king side
+		if (selectRow == 0 && selectCol == 4 && destRow == 0 && destCol == 6) {
+			if (piecesOnBoard [selectRow, selectCol + 1] == "--" && piecesOnBoard [selectRow, selectCol + 2] == "--" && piecesOnBoard [selectRow, selectCol + 3] == "BR" && BoardPosition.blackKingSideCastling) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		// King wants to castle queen side
+		if (selectRow == 0 && selectCol == 4 && destRow == 0 && destCol == 2) {
+			if (piecesOnBoard [selectRow, selectCol - 1] == "--" && piecesOnBoard [selectRow, selectCol - 2] == "--" 
+				&& piecesOnBoard[selectRow, selectCol - 3] == "--" && piecesOnBoard [selectRow, selectCol - 4] == "BR" && BoardPosition.blackQueenSideCastling) {
 				return true;
 			} else {
 				return false;
