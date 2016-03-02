@@ -9,11 +9,19 @@ public class BoardPosition
 	public bool whiteKingSideCastlingCurrentPosition;
 	public bool blackKingSideCastlingCurrentPosition;
 	public bool blackQueenSideCastlingCurrentPosition;
+	public bool whiteTakesEnPassant;
+	public bool blackTakesEnPassant;
+	public int whiteTakesEnPassantCol;
+	public int blackTakesEnPassantCol;
+
+	public static int enPassantCol = -1;
 
 	public static bool whiteQueenSideCastling = true;
 	public static bool whiteKingSideCastling = true;
 	public static bool blackQueenSideCastling = true;
 	public static bool blackKingSideCastling = true;
+	public static bool whiteTakesEnPassantFlag = false;
+	public static bool blackTakesEnPassantFlag = false;
 
 
 	public string moveNotation;
@@ -25,6 +33,10 @@ public class BoardPosition
 		whiteKingSideCastlingCurrentPosition = whiteKingSideCastling;
 		blackKingSideCastlingCurrentPosition = blackKingSideCastling;
 		blackQueenSideCastlingCurrentPosition = blackQueenSideCastling;
+		whiteTakesEnPassant = whiteTakesEnPassantFlag;
+		blackTakesEnPassant = blackTakesEnPassantFlag;
+		whiteTakesEnPassantCol = enPassantCol;
+		blackTakesEnPassantCol = enPassantCol;
 	}
 }
 

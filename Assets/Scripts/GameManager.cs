@@ -310,6 +310,7 @@ public class GameManager : MonoBehaviour {
 	#endregion
 	#region helper functions
 	void MovePieceToDestination() {
+				
 		string[,] tempBoard = new string[8, 8];
 		string temp = "";
 		string textNotation = GetMoveTextNotation();
@@ -350,6 +351,9 @@ public class GameManager : MonoBehaviour {
 				tempBoard [7, 7] = "--";
 				tempBoard [7, 5] = "WR";
 			}
+			if (WhiteTakesEnPassant ()) {
+				tempBoard [3, BoardPosition.enPassantCol] = "--";
+			}
 		}
 		if (state == State.MoveBlackPieceState) {
 			if (BlackQueenSideCastling ()) {
@@ -360,6 +364,9 @@ public class GameManager : MonoBehaviour {
 			if (BlackKingSideCastling ()) {
 				tempBoard [0, 7] = "--";
 				tempBoard [0, 5] = "BR";
+			}
+			if (BlackTakesEnPassant ()) {
+				tempBoard [4, BoardPosition.enPassantCol] = "--";
 			}
 
 		}
@@ -382,6 +389,38 @@ public class GameManager : MonoBehaviour {
 		RefreshMoveNotationBoard();
 		RemoveAllPieces ();
 		UpdateBoard ();
+	}
+	bool WhiteTakesEnPassant() {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		if (selectSquare == "WP" && BoardPosition.whiteTakesEnPassantFlag) {
+			if (selectRow == 3 && destRow == 2 && (selectCol - 1 == BoardPosition.enPassantCol || selectCol + 1 == BoardPosition.enPassantCol)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	bool BlackTakesEnPassant() {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		if (selectSquare == "BP" && BoardPosition.blackTakesEnPassantFlag) {
+			if (selectRow == 4 && destRow == 5 && (selectCol - 1 == BoardPosition.enPassantCol || selectCol + 1 == BoardPosition.enPassantCol)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	bool WhiteQueenSideCastling() {
 		string selectSquare;
@@ -591,6 +630,14 @@ public class GameManager : MonoBehaviour {
 		int selectCol, selectRow;
 		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
 
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		if (selectRow == destRow && selectCol == destCol) {
+			return false;
+		}
+
 		bool isLegal = false;
 
 		switch (selectSquare) {
@@ -646,6 +693,14 @@ public class GameManager : MonoBehaviour {
 		string selectSquare;
 		int selectCol, selectRow;
 		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		if (selectRow == destRow && selectCol == destCol) {
+			return false;
+		}
 
 		bool isLegal = false;
 
@@ -1311,8 +1366,12 @@ public class GameManager : MonoBehaviour {
 	}
 	bool WhitePawnTest1 (int selectRow, int selectCol, int destRow, int destCol)
 	{
+		BoardPosition.blackTakesEnPassantFlag = false;
 		if (selectRow == 6 && destRow == 4 && selectCol == destCol) {
 			if (boardPositions [plyMove].piecesOnBoard [selectRow - 1, destCol] == "--" && boardPositions [plyMove].piecesOnBoard [selectRow - 2, destCol] == "--") {
+				BoardPosition.enPassantCol = destCol;
+				BoardPosition.blackTakesEnPassantFlag = true;
+				boardPositions [plyMove].blackTakesEnPassantCol = destCol;
 				return true;
 			} else {
 				return false;
@@ -1325,6 +1384,8 @@ public class GameManager : MonoBehaviour {
 		if ((destCol == selectCol - 1) && (destRow == selectRow - 1)) {
 			if (boardPositions [plyMove].piecesOnBoard [destRow, destCol] [0] == 'B') {
 				return true;
+			} else if (selectRow == 3 && BoardPosition.whiteTakesEnPassantFlag && destCol == BoardPosition.enPassantCol) {
+				return true;
 			} else {
 				return false;
 			}
@@ -1332,10 +1393,13 @@ public class GameManager : MonoBehaviour {
 		if ((destCol == selectCol + 1) && (destRow == selectRow - 1)) {
 			if (boardPositions [plyMove].piecesOnBoard [destRow, destCol] [0] == 'B') {
 				return true;
+			} else if (selectRow == 3 && BoardPosition.whiteTakesEnPassantFlag && destCol == BoardPosition.enPassantCol) {
+				return true;
 			} else {
 				return false;
 			}
 		}
+
 		// TODO en-passant
 		return false;
 	}
@@ -1891,8 +1955,12 @@ public class GameManager : MonoBehaviour {
 	}
 	bool BlackPawnTest1 (int selectRow, int selectCol, int destRow, int destCol)
 	{
+		BoardPosition.whiteTakesEnPassantFlag = false;
 		if (selectRow == 1 && destRow == 3 && selectCol == destCol) {
 			if (boardPositions [plyMove].piecesOnBoard [selectRow + 1, destCol] == "--" && boardPositions [plyMove].piecesOnBoard [selectRow + 2, destCol] == "--") {
+				BoardPosition.enPassantCol = destCol;
+				BoardPosition.whiteTakesEnPassantFlag = true;
+				boardPositions [plyMove].whiteTakesEnPassantCol = destCol;
 				return true;
 			} else {
 				return false;
@@ -1905,12 +1973,16 @@ public class GameManager : MonoBehaviour {
 		if ((destCol == selectCol - 1) && (destRow == selectRow + 1)) {
 			if (boardPositions [plyMove].piecesOnBoard [destRow, destCol] [0] == 'W') {
 				return true;
+			} else if (selectRow == 4 && BoardPosition.blackTakesEnPassantFlag && destCol == BoardPosition.enPassantCol) {
+				return true;
 			} else {
 				return false;
 			}
 		}
 		if ((destCol == selectCol + 1) && (destRow == selectRow + 1)) {
 			if (boardPositions [plyMove].piecesOnBoard [destRow, destCol] [0] == 'W') {
+				return true;
+			} else if (selectRow == 4 && BoardPosition.blackTakesEnPassantFlag && destCol == BoardPosition.enPassantCol) {
 				return true;
 			} else {
 				return false;
