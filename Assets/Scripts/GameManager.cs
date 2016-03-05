@@ -12,12 +12,14 @@ public class GameManager : MonoBehaviour {
 		WhiteSelectionState, 
 		WhiteDestinationState, 
 		CheckIfLegalWhiteMoveState, 
+		PromoteWhitePawn,
 		CheckIfWhiteMatesState, 
 		CheckIfWhiteStaleMatesState,
 		MoveWhitePieceState,
 		BlackSelectionState, 
 		BlackDestinationState,
-		CheckIfLegalBlackMoveState, 
+		CheckIfLegalBlackMoveState,
+		PromoteBlackPawn,
 		CheckIfBlackMatesState, 
 		CheckIfBlackStaleMatesState,
 		MoveBlackPieceState,
@@ -43,6 +45,8 @@ public class GameManager : MonoBehaviour {
 	private List<Square> squares = new List<Square>();
 	public ClockController clockController;
 	public Text moveNotationText;
+
+	public PromotionController promotionController;
 
 	public static string[,] squareNames = new string[,] { 
 		{"A8","B8","C8","D8","E8","F8","G8","H8"},
@@ -91,6 +95,9 @@ public class GameManager : MonoBehaviour {
 			case State.CheckIfLegalWhiteMoveState:
 				CheckIfLegalWhiteMoveState ();
 				break;
+			case State.PromoteWhitePawn:
+				PromoteWhitePawnState ();
+				break;
 			case State.CheckIfWhiteMatesState:
 				CheckIfWhiteMatesState ();
 				break;
@@ -112,6 +119,9 @@ public class GameManager : MonoBehaviour {
 		
 			case State.CheckIfLegalBlackMoveState:
 				CheckIfLegalBlackMoveState ();
+				break;
+			case State.PromoteBlackPawn:
+				PromoteBlackPawnState ();
 				break;
 			case State.CheckIfBlackMatesState:
 				CheckIfBlackMatesState ();
@@ -172,16 +182,20 @@ public class GameManager : MonoBehaviour {
 	void CheckIfLegalWhiteMoveState () {
 		Debug.Log ("Inside CheckIfLegalWhiteMoveState");
 		bool legal = CheckIfWhitesMoveIsLegal ();
-		if (legal) {
+		if (legal && state != State.PromoteWhitePawn) {
 			state = State.MoveWhitePieceState;
 
-		} else {
+		} else if (state != State.PromoteWhitePawn){
 			Debug.Log ("Illegal move!");
 
 			state = State.WhiteSelectionState;
 		}
 		UnhighlightSquares ();
 		DirectToState ();
+	}
+	void PromoteWhitePawnState() {
+		promotionController.ShowWhitePromotionWindow (true);
+
 	}
 	void MoveWhitePieceState() {
 		Debug.Log ("Inside MoveWhitePieceState");
@@ -237,16 +251,21 @@ public class GameManager : MonoBehaviour {
 	void CheckIfLegalBlackMoveState() {
 		Debug.Log ("Inside CheckIfLegalBlackMoveState");
 		bool legal = CheckIfBlacksMoveIsLegal ();
-		if (legal) {
+		if (legal && state != State.PromoteBlackPawn) {
 			state = State.MoveBlackPieceState;
 
-		} else {
+		} else if (state != State.PromoteBlackPawn) {
 			Debug.Log ("Illegal move!");
 
 			state = State.BlackSelectionState;
 		}
 		UnhighlightSquares ();
 		DirectToState ();
+
+	}
+	void PromoteBlackPawnState() {
+		Debug.Log ("Inside PromoteBlackPawnState");
+		promotionController.ShowBlackPromotionWindow (true);
 
 	}
 	void MoveBlackPieceState() {
@@ -307,10 +326,33 @@ public class GameManager : MonoBehaviour {
 		state = State.WhiteWon;
 		DirectToState ();
 	}
+	public void OnWhitePromotionClicked(string choice) {
+		Debug.Log ("You chose " + choice);
+		BoardPosition.promotionChoice = choice;
+		promotionController.ShowWhitePromotionWindow (false);
+		state = State.MoveWhitePieceState;
+		DirectToState ();
+	}
+	public void OnBlackPromotionClicked(string choice) {
+		Debug.Log ("You chose " + choice);
+		BoardPosition.promotionChoice = choice;
+		promotionController.ShowBlackPromotionWindow (false);
+		state = State.MoveBlackPieceState;
+		DirectToState ();
+	}
 	#endregion
 	#region helper functions
 	void MovePieceToDestination() {
-				
+
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+
 		string[,] tempBoard = new string[8, 8];
 		string temp = "";
 		string textNotation = GetMoveTextNotation();
@@ -345,30 +387,39 @@ public class GameManager : MonoBehaviour {
 			if (WhiteQueenSideCastling ()) {
 				tempBoard [7, 0] = "--";
 				tempBoard [7, 3] = "WR";
-
+				BoardPosition.whiteQueenSideCastling = false;
 			}
 			if (WhiteKingSideCastling ()) {
 				tempBoard [7, 7] = "--";
 				tempBoard [7, 5] = "WR";
+				BoardPosition.whiteKingSideCastling = false;
 			}
 			if (WhiteTakesEnPassant ()) {
 				tempBoard [3, BoardPosition.enPassantCol] = "--";
+			}
+			if (WhitePawnPromotes ()) {
+				tempBoard [selectRow, selectCol] = "--";
+				tempBoard [destRow, destCol] = BoardPosition.promotionChoice;
 			}
 		}
 		if (state == State.MoveBlackPieceState) {
 			if (BlackQueenSideCastling ()) {
 				tempBoard [0, 0] = "--";
 				tempBoard [0, 3] = "BR";
-
+				BoardPosition.blackQueenSideCastling = false;
 			}
 			if (BlackKingSideCastling ()) {
 				tempBoard [0, 7] = "--";
 				tempBoard [0, 5] = "BR";
+				BoardPosition.blackKingSideCastling = false;
 			}
 			if (BlackTakesEnPassant ()) {
 				tempBoard [4, BoardPosition.enPassantCol] = "--";
 			}
-
+			if (BlackPawnPromotes ()) {
+				tempBoard [selectRow, selectCol] = "--";
+				tempBoard [destRow, destCol] = BoardPosition.promotionChoice;
+			}
 		}
 		// create text notation before plyMove++
 
@@ -389,6 +440,34 @@ public class GameManager : MonoBehaviour {
 		RefreshMoveNotationBoard();
 		RemoveAllPieces ();
 		UpdateBoard ();
+	}
+	bool WhitePawnPromotes() {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		if (selectSquare == "WP" && destRow == 0) {
+			return true;
+		}
+		return false;
+	}
+	bool BlackPawnPromotes() {
+		string selectSquare;
+		int selectCol, selectRow;
+		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
+
+		string destArea;
+		int destCol, destRow;
+		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
+
+		if (selectSquare == "BP" && destRow == 7) {
+			return true;
+		}
+		return false;
 	}
 	bool WhiteTakesEnPassant() {
 		string selectSquare;
@@ -658,6 +737,9 @@ public class GameManager : MonoBehaviour {
 			break;
 		case "WP":
 			isLegal = WhitePawnMoveLegal ();
+			if (isLegal && destRow == 0) {
+				state = State.PromoteWhitePawn;
+			}
 			break;
 		}
 
@@ -722,6 +804,9 @@ public class GameManager : MonoBehaviour {
 			break;
 		case "BP":
 			isLegal = BlackPawnMoveLegal ();
+			if (isLegal && destRow == 7) {
+				state = State.PromoteBlackPawn;
+			}
 			break;
 		}
 
@@ -831,11 +916,11 @@ public class GameManager : MonoBehaviour {
 		string[,] tempBoard = new string[8, 8];
 		CopyBoardToTemp (out tempBoard);
 
-		bool test1 = false;
+		if (!WhiteRookTest1 (selectRow, selectCol, destRow, destCol)) {
+			return false; // first test fails
+		}
 
-		test1 = WhiteRookTest1(selectRow, selectCol, destRow, destCol);
-
-		return test1;
+		return true;
 	}
 	bool WhiteRookTest1(int selectRow, int selectCol, int destRow, int destCol) {
 		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
@@ -1086,7 +1171,7 @@ public class GameManager : MonoBehaviour {
 		return false;
 	}
 	#endregion
-	#region white legal move functions
+	#region white queen legal move functions
 	bool WhiteQueenMoveLegal () {
 		string selectSquare;
 		int selectCol, selectRow;
@@ -1675,7 +1760,7 @@ public class GameManager : MonoBehaviour {
 		return false;
 	}
 	#endregion
-	#region black legal move functions
+	#region black queen legal move functions
 	bool BlackQueenMoveLegal () {
 		string selectSquare;
 		int selectCol, selectRow;

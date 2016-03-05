@@ -52,6 +52,8 @@
      <Compile Include="Assets\Scripts\GameManager.cs" />
      <Compile Include="Assets\Scripts\LevelManager.cs" />
      <Compile Include="Assets\Scripts\Piece.cs" />
+     <Compile Include="Assets\Scripts\PromotionController.cs" />
+     <Compile Include="Assets\Scripts\PromotionPieceClicked.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>

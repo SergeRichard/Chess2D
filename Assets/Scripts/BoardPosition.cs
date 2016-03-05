@@ -15,6 +15,7 @@ public class BoardPosition
 	public int blackTakesEnPassantCol;
 
 	public static int enPassantCol = -1;
+	public static string promotionChoice = "";
 
 	public static bool whiteQueenSideCastling = true;
 	public static bool whiteKingSideCastling = true;
