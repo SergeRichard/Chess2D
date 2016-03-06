@@ -935,12 +935,14 @@ public class GameManager : MonoBehaviour {
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
 
-		string[,] tempBoard = new string[8, 8];
-		CopyBoardToTemp (out tempBoard);
 
-		if (!WhiteRookTest1 (selectRow, selectCol, destRow, destCol)) {
-			return false; // first test fails
-		}
+		bool test1 = WhiteRookTest1 (selectRow, selectCol, destRow, destCol);
+		if (test1 == false)
+			return false;
+
+		bool test2 = WhiteRookTest2 (selectRow, selectCol, destRow, destCol);
+		if (test2 == false)
+			return false;
 
 		return true;
 	}
@@ -1013,6 +1015,18 @@ public class GameManager : MonoBehaviour {
 		}
 		return false;
 	}
+	bool WhiteRookTest2 (int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test2 = false;
+
+		// Even if pawn promotes, doesn't change whether or not white king will or will not be captured by pawn move.
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "WR";
+		return BlackResponseTest (tempBoard);
+
+	}
 	#endregion
 	#region white knight legal functions
 	bool WhiteKnightMoveLegal () {
@@ -1024,13 +1038,15 @@ public class GameManager : MonoBehaviour {
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
 
-		string[,] tempBoard = new string[8, 8];
-		CopyBoardToTemp (out tempBoard);
+		bool test1 = WhiteKnightTest1 (selectRow, selectCol, destRow, destCol);
+		if (test1 == false)
+			return false;
 
-		bool test1 = false;
+		bool test2 = WhiteKnightTest2 (selectRow, selectCol, destRow, destCol);
+		if (test2 == false)
+			return false;
 
-		test1 = WhiteKnightTest1 (selectRow, selectCol, destRow, destCol);
-		return test1;
+		return true;
 	}
 	bool WhiteKnightTest1 (int selectRow, int selectCol, int destRow, int destCol) {
 		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
@@ -1100,6 +1116,15 @@ public class GameManager : MonoBehaviour {
 		}
 		return false;
 	}
+	bool WhiteKnightTest2 (int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "WN";
+		return BlackResponseTest (tempBoard);
+
+	}
 	#endregion
 	#region white bishop legal functions
 	bool WhiteBishopMoveLegal () {
@@ -1111,13 +1136,14 @@ public class GameManager : MonoBehaviour {
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
 
-		string[,] tempBoard = new string[8, 8];
-		CopyBoardToTemp (out tempBoard);
+		bool test1 = WhiteBishopTest1 (selectRow, selectCol, destRow, destCol);
+		if (test1 == false)
+			return false;
 
-		bool test1 = false;
-
-		test1 = WhiteBishopTest1 (selectRow, selectCol, destRow, destCol);
-		return test1;
+		bool test2 = WhiteBishopTest2 (selectRow, selectCol, destRow, destCol);
+		if (test2 == false)
+			return false;
+		return true;
 
 	}
 	bool WhiteBishopTest1 (int selectRow, int selectCol, int destRow, int destCol) {
@@ -1192,6 +1218,15 @@ public class GameManager : MonoBehaviour {
 		}
 		return false;
 	}
+	bool WhiteBishopTest2 (int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "WB";
+		return BlackResponseTest (tempBoard);
+
+	}
 	#endregion
 	#region white queen legal move functions
 	bool WhiteQueenMoveLegal () {
@@ -1203,14 +1238,14 @@ public class GameManager : MonoBehaviour {
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
 
-		string[,] tempBoard = new string[8, 8];
-		CopyBoardToTemp (out tempBoard);
+		bool test1 = WhiteQueenTest1 (selectRow, selectCol, destRow, destCol);
+		if (test1 == false)
+			return false;
 
-		bool test1 = false;
-
-		test1 = WhiteQueenTest1(selectRow, selectCol, destRow, destCol);
-
-		return test1;
+		bool test2 = WhiteQueenTest2 (selectRow, selectCol, destRow, destCol);
+		if (test2 == false)
+			return false;
+		return true;
 	}
 	bool WhiteQueenTest1(int selectRow, int selectCol, int destRow, int destCol) {
 		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
@@ -1348,6 +1383,15 @@ public class GameManager : MonoBehaviour {
 		}
 		return false;
 	}
+	bool WhiteQueenTest2 (int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "WQ";
+		return BlackResponseTest (tempBoard);
+
+	}
 	#endregion
 	#region white king legal functions
 	bool WhiteKingMoveLegal () {
@@ -1359,13 +1403,14 @@ public class GameManager : MonoBehaviour {
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
 
-		string[,] tempBoard = new string[8, 8];
-		CopyBoardToTemp (out tempBoard);
+		bool test1 = WhiteKingTest1 (selectRow, selectCol, destRow, destCol);
+		if (test1 == false)
+			return false;
 
-		bool test1 = false;
-
-		test1 = WhiteKingTest1 (selectRow, selectCol, destRow, destCol);
-		return test1;
+		bool test2 = WhiteKingTest2 (selectRow, selectCol, destRow, destCol);
+		if (test2 == false)
+			return false;
+		return true;
 	}
 	bool WhiteKingTest1 (int selectRow, int selectCol, int destRow, int destCol) {
 		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
@@ -1452,6 +1497,15 @@ public class GameManager : MonoBehaviour {
 		}
 		return false;
 	}
+	bool WhiteKingTest2 (int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "WK";
+		return BlackResponseTest (tempBoard);
+
+	}
 	#endregion
 	#region White pawn legal functions
 	bool WhitePawnMoveLegal () {
@@ -1525,6 +1579,9 @@ public class GameManager : MonoBehaviour {
 		return BlackResponseTest (tempBoard);
 
 	}
+
+	#endregion
+	#region Black response
 	bool BlackResponseTest (string[,] tempBoard) {
 		if (BlackPawnAttacksKing (tempBoard)) {
 			return false;
@@ -1917,6 +1974,7 @@ public class GameManager : MonoBehaviour {
 		return false;
 
 	}
+
 	#endregion
 	#endregion
 
@@ -1931,14 +1989,14 @@ public class GameManager : MonoBehaviour {
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
 
-		string[,] tempBoard = new string[8, 8];
-		CopyBoardToTemp (out tempBoard);
+		bool test1 = BlackRookTest1 (selectRow, selectCol, destRow, destCol);
+		if (test1 == false)
+			return false;
 
-		bool test1 = false;
-
-		test1 = BlackRookTest1(selectRow, selectCol, destRow, destCol);
-
-		return test1;
+		bool test2 = BlackRookTest2 (selectRow, selectCol, destRow, destCol);
+		if (test2 == false)
+			return false;
+		return true;
 	}
 	bool BlackRookTest1(int selectRow, int selectCol, int destRow, int destCol) {
 		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
@@ -2009,6 +2067,15 @@ public class GameManager : MonoBehaviour {
 		}
 		return false;
 	}
+	bool BlackRookTest2 (int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "BR";
+		return WhiteResponseTest (tempBoard);
+
+	}
 	#endregion
 	#region black knight legal functions
 	bool BlackKnightMoveLegal () {
@@ -2020,13 +2087,14 @@ public class GameManager : MonoBehaviour {
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
 
-		string[,] tempBoard = new string[8, 8];
-		CopyBoardToTemp (out tempBoard);
+		bool test1 = BlackKnightTest1 (selectRow, selectCol, destRow, destCol);
+		if (test1 == false)
+			return false;
 
-		bool test1 = false;
-
-		test1 = BlackKnightTest1 (selectRow, selectCol, destRow, destCol);
-		return test1;
+		bool test2 = BlackKnightTest2 (selectRow, selectCol, destRow, destCol);
+		if (test2 == false)
+			return false;
+		return true;
 	}
 	bool BlackKnightTest1 (int selectRow, int selectCol, int destRow, int destCol) {
 		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
@@ -2096,6 +2164,15 @@ public class GameManager : MonoBehaviour {
 		}
 		return false;
 	}
+	bool BlackKnightTest2 (int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "BN";
+		return WhiteResponseTest (tempBoard);
+
+	}
 	#endregion
 	#region black bishop legal functions
 	bool BlackBishopMoveLegal () {
@@ -2107,14 +2184,15 @@ public class GameManager : MonoBehaviour {
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
 
-		string[,] tempBoard = new string[8, 8];
-		CopyBoardToTemp (out tempBoard);
+		bool test1 = BlackBishopTest1 (selectRow, selectCol, destRow, destCol);
+		if (test1 == false)
+			return false;
 
-		bool test1 = false;
-
-		test1 = BlackBishopTest1 (selectRow, selectCol, destRow, destCol);
-		return test1;
-
+		bool test2 = BlackBishopTest2 (selectRow, selectCol, destRow, destCol);
+		if (test2 == false)
+			return false;
+		
+		return true;
 	}
 	bool BlackBishopTest1 (int selectRow, int selectCol, int destRow, int destCol) {
 		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
@@ -2188,6 +2266,15 @@ public class GameManager : MonoBehaviour {
 		}
 		return false;
 	}
+	bool BlackBishopTest2 (int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "BB";
+		return WhiteResponseTest (tempBoard);
+
+	}
 	#endregion
 	#region black queen legal move functions
 	bool BlackQueenMoveLegal () {
@@ -2199,14 +2286,15 @@ public class GameManager : MonoBehaviour {
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
 
-		string[,] tempBoard = new string[8, 8];
-		CopyBoardToTemp (out tempBoard);
+		bool test1 = BlackQueenTest1 (selectRow, selectCol, destRow, destCol);
+		if (test1 == false)
+			return false;
 
-		bool test1 = false;
+		bool test2 = BlackQueenTest2 (selectRow, selectCol, destRow, destCol);
+		if (test2 == false)
+			return false;
 
-		test1 = BlackQueenTest1(selectRow, selectCol, destRow, destCol);
-
-		return test1;
+		return true;
 	}
 	bool BlackQueenTest1(int selectRow, int selectCol, int destRow, int destCol) {
 		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
@@ -2344,6 +2432,15 @@ public class GameManager : MonoBehaviour {
 		}
 		return false;
 	}
+	bool BlackQueenTest2 (int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "BQ";
+		return WhiteResponseTest (tempBoard);
+
+	}
 	#endregion
 	#region black king legal functions
 	bool BlackKingMoveLegal () {
@@ -2355,13 +2452,15 @@ public class GameManager : MonoBehaviour {
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
 
-		string[,] tempBoard = new string[8, 8];
-		CopyBoardToTemp (out tempBoard);
+		bool test1 = BlackKingTest1 (selectRow, selectCol, destRow, destCol);
+		if (test1 == false)
+			return false;
 
-		bool test1 = false;
+		bool test2 = BlackKingTest2 (selectRow, selectCol, destRow, destCol);
+		if (test2 == false)
+			return false;
 
-		test1 = BlackKingTest1 (selectRow, selectCol, destRow, destCol);
-		return test1;
+		return true;
 	}
 	bool BlackKingTest1 (int selectRow, int selectCol, int destRow, int destCol) {
 		var piecesOnBoard = boardPositions [plyMove].piecesOnBoard;
@@ -2448,6 +2547,15 @@ public class GameManager : MonoBehaviour {
 		}
 		return false;
 	}
+	bool BlackKingTest2 (int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "BK";
+		return WhiteResponseTest (tempBoard);
+
+	}
 	#endregion
 	#region Black pawn legal functions
 	bool BlackPawnMoveLegal () {
@@ -2522,6 +2630,9 @@ public class GameManager : MonoBehaviour {
 		return WhiteResponseTest (tempBoard);
 
 	}
+
+	#endregion
+	#region White response
 	bool WhiteResponseTest (string[,] tempBoard) {
 		if (WhitePawnAttacksKing (tempBoard)) {
 			return false;
@@ -2914,6 +3025,7 @@ public class GameManager : MonoBehaviour {
 		return false;
 
 	}
+
 	#endregion
 	#endregion
 }
