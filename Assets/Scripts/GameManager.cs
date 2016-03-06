@@ -13,16 +13,16 @@ public class GameManager : MonoBehaviour {
 		WhiteDestinationState, 
 		CheckIfLegalWhiteMoveState, 
 		PromoteWhitePawn,
+		MoveWhitePieceState,
 		CheckIfWhiteMatesState, 
 		CheckIfWhiteStaleMatesState,
-		MoveWhitePieceState,
 		BlackSelectionState, 
 		BlackDestinationState,
 		CheckIfLegalBlackMoveState,
 		PromoteBlackPawn,
+		MoveBlackPieceState,
 		CheckIfBlackMatesState, 
 		CheckIfBlackStaleMatesState,
-		MoveBlackPieceState,
 		GameDrawn,
 		WhiteWon,
 		BlackWon
@@ -98,14 +98,14 @@ public class GameManager : MonoBehaviour {
 			case State.PromoteWhitePawn:
 				PromoteWhitePawnState ();
 				break;
+			case State.MoveWhitePieceState:
+				MoveWhitePieceState ();
+				break;
 			case State.CheckIfWhiteMatesState:
 				CheckIfWhiteMatesState ();
 				break;
 			case State.CheckIfWhiteStaleMatesState:
 				CheckIfWhiteStaleMatesState ();
-				break;
-			case State.MoveWhitePieceState:
-				MoveWhitePieceState ();
 				break;
 			//////////////////
 			// Black States //
@@ -123,14 +123,14 @@ public class GameManager : MonoBehaviour {
 			case State.PromoteBlackPawn:
 				PromoteBlackPawnState ();
 				break;
+			case State.MoveBlackPieceState:
+				MoveBlackPieceState ();
+				break;
 			case State.CheckIfBlackMatesState:
 				CheckIfBlackMatesState ();
 				break;
 			case State.CheckIfBlackStaleMatesState:
 				CheckIfBlackStaleMatesState ();
-				break;
-			case State.MoveBlackPieceState:
-				MoveBlackPieceState ();
 				break;
 			case State.WhiteWon:
 				WhiteWon ();
@@ -394,6 +394,16 @@ public class GameManager : MonoBehaviour {
 				tempBoard [7, 5] = "WR";
 				BoardPosition.whiteKingSideCastling = false;
 			}
+			if (selectSquare == "WK") {
+				BoardPosition.whiteKingSideCastling = false;
+				BoardPosition.whiteQueenSideCastling = false;
+			}
+			if (selectSquare == "WR" && selectRow == 7 && selectCol == 0) {
+				BoardPosition.whiteQueenSideCastling = false;
+			}
+			if (selectSquare == "WR" && selectRow == 7 && selectCol == 7) {
+				BoardPosition.whiteKingSideCastling = false;
+			}
 			if (WhiteTakesEnPassant ()) {
 				tempBoard [3, BoardPosition.enPassantCol] = "--";
 			}
@@ -411,6 +421,16 @@ public class GameManager : MonoBehaviour {
 			if (BlackKingSideCastling ()) {
 				tempBoard [0, 7] = "--";
 				tempBoard [0, 5] = "BR";
+				BoardPosition.blackKingSideCastling = false;
+			}
+			if (selectSquare == "BK") {
+				BoardPosition.blackKingSideCastling = false;
+				BoardPosition.blackQueenSideCastling = false;
+			}
+			if (selectSquare == "BR" && selectRow == 0 && selectCol == 0) {
+				BoardPosition.blackQueenSideCastling = false;
+			}
+			if (selectSquare == "BR" && selectRow == 0 && selectCol == 7) {
 				BoardPosition.blackKingSideCastling = false;
 			}
 			if (BlackTakesEnPassant ()) {
@@ -544,7 +564,7 @@ public class GameManager : MonoBehaviour {
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
 
-		if (selectRow == 0 && selectCol == 4 && destRow == 0 && destCol == 2 && BoardPosition.whiteQueenSideCastling) {
+		if (selectRow == 0 && selectCol == 4 && destRow == 0 && destCol == 2 && BoardPosition.blackQueenSideCastling) {
 			if (selectSquare == "BK") {
 				return true;
 			}
@@ -562,7 +582,7 @@ public class GameManager : MonoBehaviour {
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
 
-		if (selectRow == 0 && selectCol == 4 && destRow == 0 && destCol == 6 && BoardPosition.whiteKingSideCastling) {
+		if (selectRow == 0 && selectCol == 4 && destRow == 0 && destCol == 6 && BoardPosition.blackKingSideCastling) {
 			if (selectSquare == "BK") {
 				return true;
 			}
@@ -866,6 +886,8 @@ public class GameManager : MonoBehaviour {
 			{"WP","WP","WP","WP","WP","WP","WP","WP"},
 			{"WR","WN","WB","WQ","WK","WB","WN","WR"},
 		};
+
+
 		boardPositions.Add (boardPosition);
 
 		for (int row = 0; row < 8; row++) {
@@ -1441,13 +1463,16 @@ public class GameManager : MonoBehaviour {
 		int destCol, destRow;
 		FindPieceOrSpaceAndLocationOnSquare(destinationSquareName, out destArea, out destRow, out destCol);
 
-		string[,] tempBoard = new string[8, 8];
-		CopyBoardToTemp (out tempBoard);
 
-		bool test1 = false;
 
-		test1 = WhitePawnTest1 (selectRow, selectCol, destRow, destCol);
-		return test1;
+		bool test1 = WhitePawnTest1 (selectRow, selectCol, destRow, destCol);
+		if (test1 == false)
+			return false;
+		
+		bool test2 = WhitePawnTest2 (selectRow, selectCol, destRow, destCol);
+		if (test2 == false)
+			return false;
+		return true;
 	}
 	bool WhitePawnTest1 (int selectRow, int selectCol, int destRow, int destCol)
 	{
@@ -1487,6 +1512,410 @@ public class GameManager : MonoBehaviour {
 
 		// TODO en-passant
 		return false;
+	}
+	bool WhitePawnTest2 (int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test2 = false;
+
+		// Even if pawn promotes, doesn't change whether or not white king will or will not be captured by pawn move.
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "WP";
+		return BlackResponseTest (tempBoard);
+
+	}
+	bool BlackResponseTest (string[,] tempBoard) {
+		if (BlackPawnAttacksKing (tempBoard)) {
+			return false;
+		}
+		if (BlackRookAttacksKing (tempBoard)) {
+			return false;
+		}
+		if (BlackKnightAttacksKing (tempBoard)) {
+			return false;
+		}
+		if (BlackBishopAttacksKing (tempBoard)) {
+			return false;
+		}
+		if (BlackQueenAttacksKing (tempBoard)) {
+			return false;
+		}
+		if (BlackKingAttacksKing (tempBoard)) {
+			return false;
+		}
+		return true;
+	}
+	bool BlackPawnAttacksKing (string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "BP") {
+					if (col < 7 && tempBoard [row + 1, col + 1] == "WK") {
+						return true;
+					} 
+					if (col > 0 && tempBoard [row + 1, col - 1] == "WK") {
+						return true;
+					} 
+				}
+
+			}
+		}
+		return false;
+	}
+	bool BlackRookAttacksKing (string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "BR") {
+					if (BlackRookMovesRightFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+					if (BlackRookMovesLeftFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+					if (BlackRookMovesUpFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+					if (BlackRookMovesDownFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	bool BlackKnightAttacksKing (string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "BN") {
+					if (row > 0 && col > 1 && tempBoard [row - 1, col - 2] == "WK") {
+						return true;
+					}
+					if (row > 1 && col > 0 && tempBoard [row - 2, col - 1] == "WK") {
+						return true;
+					}
+					if (row > 1 && col < 7 && tempBoard [row - 2, col + 1] == "WK") {
+						return true;
+					}
+					if (row > 0 && col < 6 && tempBoard [row - 1, col + 2] == "WK") {
+						return true;
+					}
+					if (row < 7 && col < 6 && tempBoard [row + 1, col + 2] == "WK") {
+						return true;
+					}
+					if (row < 6 && col < 7 && tempBoard [row + 2, col + 1] == "WK") {
+						return true;
+					}
+					if (row < 6 && col > 0 && tempBoard [row + 2, col - 1] == "WK") {
+						return true;
+					}
+					if (row < 7 && col > 1 && tempBoard [row + 1, col - 2] == "WK") {
+						return true;
+					}
+
+				}
+			}
+		}
+		return false;
+	}
+	bool BlackBishopAttacksKing (string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "BB") {
+					if (BlackBishopMovesDiagTopLeft (tempBoard, row, col)) {
+						return true;
+					}
+					if (BlackBishopMovesDiagTopRight (tempBoard, row, col)) {
+						return true;
+					}
+					if (BlackBishopMovesDiagBottomLeft (tempBoard, row, col)) {
+						return true;
+					}
+					if (BlackBishopMovesDiagBottomRight (tempBoard, row, col)) {
+						return true;
+					}
+
+				}
+			}
+		}
+		return false;
+	}
+	bool BlackQueenAttacksKing (string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "BQ") {
+					if (BlackQueenMovesDiagTopLeft (tempBoard, row, col)) {
+						return true;
+					}
+					if (BlackQueenMovesDiagTopRight (tempBoard, row, col)) {
+						return true;
+					}
+					if (BlackQueenMovesDiagBottomLeft (tempBoard, row, col)) {
+						return true;
+					}
+					if (BlackQueenMovesDiagBottomRight (tempBoard, row, col)) {
+						return true;
+					}
+					if (BlackQueenMovesRightFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+					if (BlackQueenMovesLeftFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+					if (BlackQueenMovesUpFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+					if (BlackQueenMovesDownFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	bool BlackKingAttacksKing (string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "BK") {
+					if (col > 0 && tempBoard [row, col - 1] == "WK") {
+						return true;
+					}
+					if (row > 0 && col > 0 && tempBoard [row - 1, col - 1] == "WK") {
+						return true;
+					}
+					if (row > 0 && tempBoard [row - 1, col] == "WK") {
+						return true;
+					}
+					if (row > 0 && col < 7 && tempBoard [row - 1, col + 1] == "WK") {
+						return true;
+					}
+					if (col < 7 && tempBoard [row, col + 1] == "WK") {
+						return true;
+					}
+					if (row < 7 && col < 7 && tempBoard [row + 1, col + 1] == "WK") {
+						return true;
+					}
+					if (row < 7 && tempBoard [row + 1, col] == "WK") {
+						return true;
+					}
+					if (row < 7 && col > 0 && tempBoard [row + 1, col - 1] == "WK") {
+						return true;
+					}
+
+				}
+			}
+		}
+		return false;
+
+	}
+	bool BlackBishopMovesDiagTopLeft (string[,] tempBoard, int row, int col) {
+		row--;
+		col--;
+		while (row > -1 && col > -1) {
+			if (tempBoard [row, col] == "WK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row--;
+			col--;
+		}
+		return false;
+	}
+	bool BlackBishopMovesDiagTopRight (string[,] tempBoard, int row, int col) {
+		row--;
+		col++;
+		while (row > -1 && col < 8) {
+			if (tempBoard [row, col] == "WK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row--;
+			col++;
+		}
+		return false;
+	}
+	bool BlackBishopMovesDiagBottomRight (string[,] tempBoard, int row, int col) {
+		row++;
+		col++;
+		while (row < 8 && col < 8) {
+			if (tempBoard [row, col] == "WK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row++;
+			col++;
+		}
+		return false;
+	}
+	bool BlackBishopMovesDiagBottomLeft (string[,] tempBoard, int row, int col) {
+		row++;
+		col--;
+		while (row < 8 && col > -1) {
+			if (tempBoard [row, col] == "WK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row++;
+			col--;
+		}
+		return false;
+	}
+	bool BlackRookMovesRightFindsKing (string[,] tempBoard, int row, int col) {
+		col++;
+		while (col < 8) {
+			if (tempBoard [row, col] == "WK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			col++;
+		}
+		return false;
+	}
+	bool BlackRookMovesLeftFindsKing (string[,] tempBoard, int row, int col) {
+		col--;
+		while (col > -1) {
+			if (tempBoard [row, col] == "WK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			col--;
+		}
+		return false;
+	}
+	bool BlackRookMovesUpFindsKing (string[,] tempBoard, int row, int col) {
+		row--;
+		while (row > -1) {
+			if (tempBoard [row, col] == "WK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			row--;
+		}
+		return false;
+	}
+	bool BlackRookMovesDownFindsKing (string[,] tempBoard, int row, int col) {
+		row++;
+		while (row < 8) {
+			if (tempBoard [row, col] == "WK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			row++;
+		}
+		return false;
+
+	}
+	bool BlackQueenMovesDiagTopLeft (string[,] tempBoard, int row, int col) {
+		row--;
+		col--;
+		while (row > -1 && col > -1) {
+			if (tempBoard [row, col] == "WK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row--;
+			col--;
+		}
+		return false;
+	}
+	bool BlackQueenMovesDiagTopRight (string[,] tempBoard, int row, int col) {
+		row--;
+		col++;
+		while (row > -1 && col < 8) {
+			if (tempBoard [row, col] == "WK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row--;
+			col++;
+		}
+		return false;
+	}
+	bool BlackQueenMovesDiagBottomRight (string[,] tempBoard, int row, int col) {
+		row++;
+		col++;
+		while (row < 8 && col < 8) {
+			if (tempBoard [row, col] == "WK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row++;
+			col++;
+		}
+		return false;
+	}
+	bool BlackQueenMovesDiagBottomLeft (string[,] tempBoard, int row, int col) {
+		row++;
+		col--;
+		while (row < 8 && col > -1) {
+			if (tempBoard [row, col] == "WK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row++;
+			col--;
+		}
+		return false;
+	}
+	bool BlackQueenMovesRightFindsKing (string[,] tempBoard, int row, int col) {
+		col++;
+		while (col < 8) {
+			if (tempBoard [row, col] == "WK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			col++;
+		}
+		return false;
+	}
+	bool BlackQueenMovesLeftFindsKing (string[,] tempBoard, int row, int col) {
+		col--;
+		while (col > -1) {
+			if (tempBoard [row, col] == "WK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			col--;
+		}
+		return false;
+	}
+	bool BlackQueenMovesUpFindsKing (string[,] tempBoard, int row, int col) {
+		row--;
+		while (row > -1) {
+			if (tempBoard [row, col] == "WK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			row--;
+		}
+		return false;
+	}
+	bool BlackQueenMovesDownFindsKing (string[,] tempBoard, int row, int col) {
+		row++;
+		while (row < 8) {
+			if (tempBoard [row, col] == "WK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			row++;
+		}
+		return false;
+
 	}
 	#endregion
 	#endregion
@@ -2033,9 +2462,14 @@ public class GameManager : MonoBehaviour {
 		string[,] tempBoard = new string[8, 8];
 		CopyBoardToTemp (out tempBoard);
 
-		bool test1 = false;
+		bool test1 = BlackPawnTest1 (selectRow, selectCol, destRow, destCol);
+		if (test1 == false)
+			return false;
 
-		test1 = BlackPawnTest1 (selectRow, selectCol, destRow, destCol);
+		bool test2 = BlackPawnTest2 (selectRow, selectCol, destRow, destCol);
+		if (test2 == false)
+			return false;
+
 		return test1;
 	}
 	bool BlackPawnTest1 (int selectRow, int selectCol, int destRow, int destCol)
@@ -2075,6 +2509,410 @@ public class GameManager : MonoBehaviour {
 		}
 		// TODO en-passant
 		return false;
+	}
+	bool BlackPawnTest2 (int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		bool test2 = false;
+
+		// Even if pawn promotes, doesn't change whether or not white king will or will not be captured by pawn move.
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "BP";
+		return WhiteResponseTest (tempBoard);
+
+	}
+	bool WhiteResponseTest (string[,] tempBoard) {
+		if (WhitePawnAttacksKing (tempBoard)) {
+			return false;
+		}
+		if (WhiteRookAttacksKing (tempBoard)) {
+			return false;
+		}
+		if (WhiteKnightAttacksKing (tempBoard)) {
+			return false;
+		}
+		if (WhiteBishopAttacksKing (tempBoard)) {
+			return false;
+		}
+		if (WhiteQueenAttacksKing (tempBoard)) {
+			return false;
+		}
+		if (WhiteKingAttacksKing (tempBoard)) {
+			return false;
+		}
+		return true;
+	}
+	bool WhitePawnAttacksKing (string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "WP") {
+					if (col < 7 && tempBoard [row - 1, col + 1] == "BK") {
+						return true;
+					} 
+					if (col > 0 && tempBoard [row - 1, col - 1] == "BK") {
+						return true;
+					} 
+				}
+
+			}
+		}
+		return false;
+	}
+	bool WhiteRookAttacksKing (string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "WR") {
+					if (WhiteRookMovesRightFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+					if (WhiteRookMovesLeftFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+					if (WhiteRookMovesUpFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+					if (WhiteRookMovesDownFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	bool WhiteKnightAttacksKing (string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "WN") {
+					if (row > 0 && col > 1 && tempBoard [row - 1, col - 2] == "BK") {
+						return true;
+					}
+					if (row > 1 && col > 0 && tempBoard [row - 2, col - 1] == "BK") {
+						return true;
+					}
+					if (row > 1 && col < 7 && tempBoard [row - 2, col + 1] == "BK") {
+						return true;
+					}
+					if (row > 0 && col < 6 && tempBoard [row - 1, col + 2] == "BK") {
+						return true;
+					}
+					if (row < 7 && col < 6 && tempBoard [row + 1, col + 2] == "BK") {
+						return true;
+					}
+					if (row < 6 && col < 7 && tempBoard [row + 2, col + 1] == "BK") {
+						return true;
+					}
+					if (row < 6 && col > 0 && tempBoard [row + 2, col - 1] == "BK") {
+						return true;
+					}
+					if (row < 7 && col > 1 && tempBoard [row + 1, col - 2] == "BK") {
+						return true;
+					}
+
+				}
+			}
+		}
+		return false;
+	}
+	bool WhiteBishopAttacksKing (string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "WB") {
+					if (WhiteBishopMovesDiagTopLeft (tempBoard, row, col)) {
+						return true;
+					}
+					if (WhiteBishopMovesDiagTopRight (tempBoard, row, col)) {
+						return true;
+					}
+					if (WhiteBishopMovesDiagBottomLeft (tempBoard, row, col)) {
+						return true;
+					}
+					if (WhiteBishopMovesDiagBottomRight (tempBoard, row, col)) {
+						return true;
+					}
+
+				}
+			}
+		}
+		return false;
+	}
+	bool WhiteQueenAttacksKing (string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "WQ") {
+					if (WhiteQueenMovesDiagTopLeft (tempBoard, row, col)) {
+						return true;
+					}
+					if (WhiteQueenMovesDiagTopRight (tempBoard, row, col)) {
+						return true;
+					}
+					if (WhiteQueenMovesDiagBottomLeft (tempBoard, row, col)) {
+						return true;
+					}
+					if (WhiteQueenMovesDiagBottomRight (tempBoard, row, col)) {
+						return true;
+					}
+					if (WhiteQueenMovesRightFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+					if (WhiteQueenMovesLeftFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+					if (WhiteQueenMovesUpFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+					if (WhiteQueenMovesDownFindsKing(tempBoard, row, col)) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	bool WhiteKingAttacksKing (string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "WK") {
+					if (col > 0 && tempBoard [row, col - 1] == "BK") {
+						return true;
+					}
+					if (row > 0 && col > 0 && tempBoard [row - 1, col - 1] == "BK") {
+						return true;
+					}
+					if (row > 0 && tempBoard [row - 1, col] == "BK") {
+						return true;
+					}
+					if (row > 0 && col < 7 && tempBoard [row - 1, col + 1] == "BK") {
+						return true;
+					}
+					if (col < 7 && tempBoard [row, col + 1] == "BK") {
+						return true;
+					}
+					if (row < 7 && col < 7 && tempBoard [row + 1, col + 1] == "BK") {
+						return true;
+					}
+					if (row < 7 && tempBoard [row + 1, col] == "BK") {
+						return true;
+					}
+					if (row < 7 && col > 0 && tempBoard [row + 1, col - 1] == "BK") {
+						return true;
+					}
+
+				}
+			}
+		}
+		return false;
+
+	}
+	bool WhiteBishopMovesDiagTopLeft (string[,] tempBoard, int row, int col) {
+		row--;
+		col--;
+		while (row > -1 && col > -1) {
+			if (tempBoard [row, col] == "BK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row--;
+			col--;
+		}
+		return false;
+	}
+	bool WhiteBishopMovesDiagTopRight (string[,] tempBoard, int row, int col) {
+		row--;
+		col++;
+		while (row > -1 && col < 8) {
+			if (tempBoard [row, col] == "BK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row--;
+			col++;
+		}
+		return false;
+	}
+	bool WhiteBishopMovesDiagBottomRight (string[,] tempBoard, int row, int col) {
+		row++;
+		col++;
+		while (row < 8 && col < 8) {
+			if (tempBoard [row, col] == "BK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row++;
+			col++;
+		}
+		return false;
+	}
+	bool WhiteBishopMovesDiagBottomLeft (string[,] tempBoard, int row, int col) {
+		row++;
+		col--;
+		while (row < 8 && col > -1) {
+			if (tempBoard [row, col] == "BK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row++;
+			col--;
+		}
+		return false;
+	}
+	bool WhiteRookMovesRightFindsKing (string[,] tempBoard, int row, int col) {
+		col++;
+		while (col < 8) {
+			if (tempBoard [row, col] == "BK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			col++;
+		}
+		return false;
+	}
+	bool WhiteRookMovesLeftFindsKing (string[,] tempBoard, int row, int col) {
+		col--;
+		while (col > -1) {
+			if (tempBoard [row, col] == "BK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			col--;
+		}
+		return false;
+	}
+	bool WhiteRookMovesUpFindsKing (string[,] tempBoard, int row, int col) {
+		row--;
+		while (row > -1) {
+			if (tempBoard [row, col] == "BK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			row--;
+		}
+		return false;
+	}
+	bool WhiteRookMovesDownFindsKing (string[,] tempBoard, int row, int col) {
+		row++;
+		while (row < 8) {
+			if (tempBoard [row, col] == "BK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			row++;
+		}
+		return false;
+
+	}
+	bool WhiteQueenMovesDiagTopLeft (string[,] tempBoard, int row, int col) {
+		row--;
+		col--;
+		while (row > -1 && col > -1) {
+			if (tempBoard [row, col] == "BK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row--;
+			col--;
+		}
+		return false;
+	}
+	bool WhiteQueenMovesDiagTopRight (string[,] tempBoard, int row, int col) {
+		row--;
+		col++;
+		while (row > -1 && col < 8) {
+			if (tempBoard [row, col] == "BK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row--;
+			col++;
+		}
+		return false;
+	}
+	bool WhiteQueenMovesDiagBottomRight (string[,] tempBoard, int row, int col) {
+		row++;
+		col++;
+		while (row < 8 && col < 8) {
+			if (tempBoard [row, col] == "BK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row++;
+			col++;
+		}
+		return false;
+	}
+	bool WhiteQueenMovesDiagBottomLeft (string[,] tempBoard, int row, int col) {
+		row++;
+		col--;
+		while (row < 8 && col > -1) {
+			if (tempBoard [row, col] == "BK") {
+				return true;
+			}
+			if (tempBoard [row, col] [0] == 'B' || tempBoard [row, col] [0] == 'W') {
+				return false;
+			}
+			row++;
+			col--;
+		}
+		return false;
+	}
+	bool WhiteQueenMovesRightFindsKing (string[,] tempBoard, int row, int col) {
+		col++;
+		while (col < 8) {
+			if (tempBoard [row, col] == "BK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			col++;
+		}
+		return false;
+	}
+	bool WhiteQueenMovesLeftFindsKing (string[,] tempBoard, int row, int col) {
+		col--;
+		while (col > -1) {
+			if (tempBoard [row, col] == "BK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			col--;
+		}
+		return false;
+	}
+	bool WhiteQueenMovesUpFindsKing (string[,] tempBoard, int row, int col) {
+		row--;
+		while (row > -1) {
+			if (tempBoard [row, col] == "BK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			row--;
+		}
+		return false;
+	}
+	bool WhiteQueenMovesDownFindsKing (string[,] tempBoard, int row, int col) {
+		row++;
+		while (row < 8) {
+			if (tempBoard [row, col] == "BK")
+				return true;
+			if (tempBoard [row, col] [0] == 'W' || tempBoard [row, col] [0] == 'B')
+				return false;
+			row++;
+		}
+		return false;
+
 	}
 	#endregion
 	#endregion
