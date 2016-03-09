@@ -2,7 +2,7 @@
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\GameManager.cs">
     <Files>
-      <File FileName="Assets\Scripts\GameManager.cs" Line="2566" Column="19" />
+      <File FileName="Assets\Scripts\GameManager.cs" Line="910" Column="46" />
       <File FileName="Assets\Scripts\ClockController.cs" Line="1" Column="1" />
       <File FileName="Assets\Scripts\DetectSquareClick.cs" Line="1" Column="1" />
       <File FileName="Assets\Scripts\Piece.cs" Line="1" Column="1" />
@@ -15,10 +15,10 @@
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
     <BreakpointStore>
       <Breakpoint file="C:\Users\Serge\Documents\GitHub\Chess2D\Assets\Scripts\ClockController.cs" line="65" column="1" />
-      <Breakpoint file="C:\Users\Serge\Documents\GitHub\Chess2D\Assets\Scripts\GameManager.cs" line="1188" column="1" />
-      <Breakpoint file="C:\Users\Serge\Documents\GitHub\Chess2D\Assets\Scripts\GameManager.cs" line="1204" column="1" />
-      <Breakpoint file="C:\Users\Serge\Documents\GitHub\Chess2D\Assets\Scripts\GameManager.cs" line="1551" column="1" />
-      <Breakpoint file="C:\Users\Serge\Documents\GitHub\Chess2D\Assets\Scripts\GameManager.cs" line="1560" column="1" />
+      <Breakpoint file="C:\Users\Serge\Documents\GitHub\Chess2D\Assets\Scripts\GameManager.cs" line="1217" column="1" />
+      <Breakpoint file="C:\Users\Serge\Documents\GitHub\Chess2D\Assets\Scripts\GameManager.cs" line="1233" column="1" />
+      <Breakpoint file="C:\Users\Serge\Documents\GitHub\Chess2D\Assets\Scripts\GameManager.cs" line="1541" column="1" />
+      <Breakpoint file="C:\Users\Serge\Documents\GitHub\Chess2D\Assets\Scripts\GameManager.cs" line="1597" column="1" />
     </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
