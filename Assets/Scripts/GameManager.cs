@@ -896,16 +896,6 @@ public class GameManager : MonoBehaviour {
 	void InitializeBoard() {
 		//Instantiate (piecesPrefab [0], new Vector3 (0, 0, 0), Quaternion.identity);
 		BoardPosition boardPosition = new BoardPosition(plyMove, "");
-//		boardPosition.piecesOnBoard = new string[,] { 
-//			{"BR","BN","BB","BQ","BK","BB","BN","BR"},
-//			{"BP","BP","BP","BP","BP","BP","BP","BP"},
-//			{"--","--","--","--","--","--","--","--"},
-//			{"--","--","--","--","--","--","--","--"},
-//			{"--","--","--","--","--","--","--","--"},
-//			{"--","--","--","--","--","--","--","--"},
-//			{"WP","WP","WP","WP","WP","WP","WP","WP"},
-//			{"WR","WN","WB","WQ","WK","WB","WN","WR"},
-//		};
 		boardPosition.piecesOnBoard = new string[,] { 
 			{"BR","BN","BB","BQ","BK","BB","BN","BR"},
 			{"BP","BP","BP","BP","BP","BP","BP","BP"},
@@ -913,9 +903,10 @@ public class GameManager : MonoBehaviour {
 			{"--","--","--","--","--","--","--","--"},
 			{"--","--","--","--","--","--","--","--"},
 			{"--","--","--","--","--","--","--","--"},
-			{"WP","--","--","WP","WP","--","BK","WP"},
-			{"WR","--","--","--","WK","--","--","WR"},
+			{"WP","WP","WP","WP","WP","WP","WP","WP"},
+			{"WR","WN","WB","WQ","WK","WB","WN","WR"},
 		};
+
 
 		boardPositions.Add (boardPosition);
 
@@ -1621,7 +1612,7 @@ public class GameManager : MonoBehaviour {
 				}
 			}
 			if (tempBoard [row, initialCol][0]== 'B' || tempBoard [row, initialCol][0] == 'W') {
-				return false;
+				break;
 			}
 		}
 		// search left
@@ -1638,7 +1629,7 @@ public class GameManager : MonoBehaviour {
 				}
 			}
 			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
-				return false;
+				break;
 			}
 		}
 		// search right
@@ -1655,7 +1646,7 @@ public class GameManager : MonoBehaviour {
 				}
 			}
 			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
-				return false;
+				break;
 			}
 		}
 		return false;
@@ -1729,7 +1720,7 @@ public class GameManager : MonoBehaviour {
 				}
 			}
 			if (tempBoard [row, col][0]== 'B' || tempBoard [row, col][0] == 'W') {
-				return false;
+				break;
 			}
 		}
 		// search digaonaly bottom left
@@ -1747,7 +1738,7 @@ public class GameManager : MonoBehaviour {
 				}
 			}
 			if (tempBoard [row, col][0]== 'B' || tempBoard [row, col][0] == 'W') {
-				return false;
+				break;
 			}
 		}
 
@@ -1759,7 +1750,7 @@ public class GameManager : MonoBehaviour {
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
 				if (tempBoard [row, col] == "BQ") {
-					if (BlackBishopCastlingSquaresSearch (kingSideCastling, tempBoard, row, col)) {
+					if (BlackQueenCastlingSquaresSearch (kingSideCastling, tempBoard, row, col)) {
 						return true;
 					}
 
@@ -1785,7 +1776,7 @@ public class GameManager : MonoBehaviour {
 				}
 			}
 			if (tempBoard [row, col][0]== 'B' || tempBoard [row, col][0] == 'W') {
-				return false;
+				break;
 			}
 		}
 		// search digaonaly bottom left
@@ -1803,7 +1794,7 @@ public class GameManager : MonoBehaviour {
 				}
 			}
 			if (tempBoard [row, col][0]== 'B' || tempBoard [row, col][0] == 'W') {
-				return false;
+				break;
 			}
 		}
 		// search down
@@ -1821,7 +1812,7 @@ public class GameManager : MonoBehaviour {
 				}
 			}
 			if (tempBoard [row, initialCol][0]== 'B' || tempBoard [row, initialCol][0] == 'W') {
-				return false;
+				break;
 			}
 		}
 		// search left
@@ -1838,7 +1829,7 @@ public class GameManager : MonoBehaviour {
 				}
 			}
 			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
-				return false;
+				break;
 			}
 		}
 		// search right
@@ -1855,7 +1846,7 @@ public class GameManager : MonoBehaviour {
 				}
 			}
 			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
-				return false;
+				break;
 			}
 		}
 		return false;
@@ -2938,7 +2929,7 @@ public class GameManager : MonoBehaviour {
 		// King wants to castle king side
 		if (selectRow == 0 && selectCol == 4 && destRow == 0 && destCol == 6) {
 			if (piecesOnBoard [selectRow, selectCol + 1] == "--" && piecesOnBoard [selectRow, selectCol + 2] == "--" && piecesOnBoard [selectRow, selectCol + 3] == "BR" && BoardPosition.blackKingSideCastling) {
-				return true;
+				return BlackKingSideCastlingTest(selectRow, selectCol, destRow, destCol);
 			} else {
 				return false;
 			}
@@ -2947,11 +2938,388 @@ public class GameManager : MonoBehaviour {
 		if (selectRow == 0 && selectCol == 4 && destRow == 0 && destCol == 2) {
 			if (piecesOnBoard [selectRow, selectCol - 1] == "--" && piecesOnBoard [selectRow, selectCol - 2] == "--" 
 				&& piecesOnBoard[selectRow, selectCol - 3] == "--" && piecesOnBoard [selectRow, selectCol - 4] == "BR" && BoardPosition.blackQueenSideCastling) {
-				return true;
+				return BlackQueenSideCastlingTest(selectRow, selectCol, destRow, destCol);
 			} else {
 				return false;
 			}
 		}
+		return false;
+	}
+	bool BlackKingSideCastlingTest(int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "BK";
+
+		bool kingSideCastling = true;
+
+
+		bool test1 = !WhitePawnPreventsCastling (kingSideCastling, tempBoard);
+		bool test2 = !WhiteRookPreventsCastling (kingSideCastling, tempBoard);
+		bool test3 = !WhiteKnightPreventsCastling (kingSideCastling, tempBoard);
+		bool test4 = !WhiteBishopPreventsCastling (kingSideCastling, tempBoard);
+		bool test5 = !WhiteQueenPreventsCastling (kingSideCastling, tempBoard);
+		bool test6 = !WhiteKingPreventsCastling (kingSideCastling, tempBoard);
+
+		return test1 && test2 && test3 && test4 && test5 && test6;
+	}
+	bool BlackQueenSideCastlingTest(int selectRow, int selectCol, int destRow, int destCol) {
+		string[,] tempBoard = new string[8, 8];
+		CopyBoardToTemp (out tempBoard);
+
+		tempBoard [selectRow, selectCol] = "--";
+		tempBoard [destRow, destCol] = "BK";
+
+		bool kingSideCastling = false;
+
+		bool test1 = !WhitePawnPreventsCastling (kingSideCastling, tempBoard);
+		bool test2 = !WhiteRookPreventsCastling (kingSideCastling, tempBoard);
+		bool test3 = !WhiteKnightPreventsCastling (kingSideCastling, tempBoard);
+		bool test4 = !WhiteBishopPreventsCastling (kingSideCastling, tempBoard);
+		bool test5 = !WhiteQueenPreventsCastling (kingSideCastling, tempBoard);
+		bool test6 = !WhiteKingPreventsCastling (kingSideCastling, tempBoard);
+
+		return test1 && test2 && test3 && test4 && test5 && test6;
+	}
+	bool WhitePawnPreventsCastling (bool kingSideCastling, string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "WP") {
+					if (kingSideCastling) {
+						if (col > 0 && (blackCastlingSquares [row - 1, col - 1] == "KS" || blackCastlingSquares [row - 1, col - 1] == "BS")) {
+							return true;
+						}
+						if (col < 7 && (blackCastlingSquares [row - 1, col + 1] == "KS" || blackCastlingSquares [row - 1, col + 1] == "BS")) {
+							return true;
+						}
+					} else {
+						if (col > 0 && (blackCastlingSquares [row - 1, col - 1] == "QS" || blackCastlingSquares [row - 1, col - 1] == "BS")) {
+							return true;
+						}
+						if (col < 7 && (blackCastlingSquares [row - 1, col + 1] == "QS" || blackCastlingSquares [row - 1, col + 1] == "BS")) {
+							return true;
+						}
+					}
+
+				}
+			}
+		}
+
+		return false;
+	}
+	bool WhiteRookPreventsCastling (bool kingSideCastling, string[,] tempBoard) {
+
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "WR") {
+					if (WhiteRookCastlingSquaresSearch (kingSideCastling, tempBoard, row, col)) {
+						return true;
+					}
+
+				}
+			}
+		}
+		return false;
+	}
+	bool WhiteRookCastlingSquaresSearch(bool kingSideCastling, string[,] tempBoard, int initialRow, int initialCol) {
+
+		// search up
+		for (int row = initialRow - 1; row > -1; row--) {		
+			// Order is important here. There has to be a caslting square check. If found return true, else proceed to checking if black rook can move any further. If not, return false
+			// for not finding a castling square.
+			if (kingSideCastling) {
+				if (blackCastlingSquares [row, initialCol] == "KS" || blackCastlingSquares [row, initialCol] == "BS") {
+					return true;
+				}
+			}
+			if (!kingSideCastling) {
+				if (blackCastlingSquares [row, initialCol] == "QS" || blackCastlingSquares [row, initialCol] == "BS") {
+					return true;
+				}
+			}
+			if (tempBoard [row, initialCol][0]== 'B' || tempBoard [row, initialCol][0] == 'W') {
+				break;
+			}
+		}
+		// search left
+		for (int col = initialCol - 1; col > -1; col++) {
+
+			if (kingSideCastling) {
+				if (blackCastlingSquares [col, initialCol] == "KS" || blackCastlingSquares [col, initialCol] == "BS") {
+					return true;
+				}
+			}
+			if (!kingSideCastling) {
+				if (blackCastlingSquares [col, initialCol] == "QS" || blackCastlingSquares [col, initialCol] == "BS") {
+					return true;
+				}
+			}
+			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
+				break;
+			}
+		}
+		// search right
+		for (int col = initialCol + 1; col < 8; col++) {
+
+			if (kingSideCastling) {
+				if (blackCastlingSquares [col, initialCol] == "KS" || blackCastlingSquares [col, initialCol] == "BS") {
+					return true;
+				}
+			}
+			if (!kingSideCastling) {
+				if (blackCastlingSquares [col, initialCol] == "QS" || blackCastlingSquares [col, initialCol] == "BS") {
+					return true;
+				}
+			}
+			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
+				break;
+			}
+		}
+		return false;
+	}
+	bool WhiteKnightPreventsCastling (bool kingSideCastling, string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "WN") {
+					if (kingSideCastling) {
+						if (row - 1 > -1 && col - 2 > -1 && (blackCastlingSquares [row - 1, col - 2] == "KS" || blackCastlingSquares [row - 1, col - 2] == "BS")) {
+							return true;
+						}
+						if (row - 2 > -1 && col - 1 > -1 && (blackCastlingSquares [row - 2, col - 1] == "KS" || blackCastlingSquares [row - 2, col - 1] == "BS")) {
+							return true;
+						}
+						if (row - 2 > -1 && col + 1 < 8 && (blackCastlingSquares [row - 2, col + 1] == "KS" || blackCastlingSquares [row - 2, col + 1] == "BS")) {
+							return true;
+						}
+						if (row - 1 > -1 && col + 2 < 8 && (blackCastlingSquares [row - 1, col + 2] == "KS" || blackCastlingSquares [row - 1, col + 2] == "BS")) {
+							return true;
+						}
+					} else {
+						if (row - 1 > -1 && col - 2 > -1 && (blackCastlingSquares [row - 1, col - 2] == "QS" || blackCastlingSquares [row - 1, col - 2] == "BS")) {
+							return true;
+						}
+						if (row - 2 > -1 && col - 1 > -1 && (blackCastlingSquares [row - 2, col - 1] == "QS" || blackCastlingSquares [row - 2, col - 1] == "BS")) {
+							return true;
+						}
+						if (row - 2 > -1 && col + 1 < 8 && (blackCastlingSquares [row - 2, col + 1] == "QS" || blackCastlingSquares [row - 2, col + 1] == "BS")) {
+							return true;
+						}
+						if (row - 1 > -1 && col + 2 < 8 && (blackCastlingSquares [row - 1, col + 2] == "QS" || blackCastlingSquares [row - 1, col + 2] == "BS")) {
+							return true;
+						}
+					}
+
+				}
+			}
+		}
+
+		return false;
+	}
+	bool WhiteBishopPreventsCastling (bool kingSideCastling, string[,] tempBoard) {
+
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "WB") {
+					if (WhiteBishopCastlingSquaresSearch (kingSideCastling, tempBoard, row, col)) {
+						return true;
+					}
+
+				}
+			}
+		}
+		return false;
+	}
+	bool WhiteBishopCastlingSquaresSearch(bool kingSideCastling, string[,] tempBoard, int initialRow, int initialCol) {
+
+		// search digaonaly top right
+		for (int row = initialRow - 1, col = initialCol + 1; row > -1 && col < 8; row--, col++) {		
+			// Order is important here. There has to be a caslting square check. If found return true, else proceed to checking if black rook can move any further. If not, return false
+			// for not finding a castling square.
+			if (kingSideCastling) {
+				if (blackCastlingSquares [row, col] == "KS" || blackCastlingSquares [row, col] == "BS") {
+					return true;
+				}
+			}
+			if (!kingSideCastling) {
+				if (blackCastlingSquares [row, col] == "QS" || blackCastlingSquares [row, col] == "BS") {
+					return true;
+				}
+			}
+			if (tempBoard [row, col][0]== 'B' || tempBoard [row, col][0] == 'W') {
+				break;
+			}
+		}
+		// search digaonaly top left
+		for (int row = initialRow - 1, col = initialCol - 1; row > -1 && col > 0; row--, col--) {		
+			// Order is important here. There has to be a caslting square check. If found return true, else proceed to checking if black rook can move any further. If not, return false
+			// for not finding a castling square.
+			if (kingSideCastling) {
+				if (blackCastlingSquares [row, col] == "KS" || blackCastlingSquares [row, col] == "BS") {
+					return true;
+				}
+			}
+			if (!kingSideCastling) {
+				if (blackCastlingSquares [row, col] == "QS" || blackCastlingSquares [row, col] == "BS") {
+					return true;
+				}
+			}
+			if (tempBoard [row, col][0]== 'B' || tempBoard [row, col][0] == 'W') {
+				break;
+			}
+		}
+
+		return false;
+	}
+
+	bool WhiteQueenPreventsCastling (bool kingSideCastling, string[,] tempBoard) {
+
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "WQ") {
+					if (WhiteQueenCastlingSquaresSearch (kingSideCastling, tempBoard, row, col)) {
+						return true;
+					}
+
+				}
+			}
+		}
+		return false;
+	}
+	bool WhiteQueenCastlingSquaresSearch(bool kingSideCastling, string[,] tempBoard, int initialRow, int initialCol) {
+
+		// search digaonaly top right
+		for (int row = initialRow - 1, col = initialCol + 1; row > -1 && col < 8; row--, col++) {		
+			// Order is important here. There has to be a caslting square check. If found return true, else proceed to checking if black rook can move any further. If not, return false
+			// for not finding a castling square.
+			if (kingSideCastling) {
+				if (blackCastlingSquares [row, col] == "KS" || blackCastlingSquares [row, col] == "BS") {
+					return true;
+				}
+			}
+			if (!kingSideCastling) {
+				if (blackCastlingSquares [row, col] == "QS" || blackCastlingSquares [row, col] == "BS") {
+					return true;
+				}
+			}
+			if (tempBoard [row, col][0]== 'B' || tempBoard [row, col][0] == 'W') {
+				break;
+			}
+		}
+		// search digaonaly top left
+		for (int row = initialRow - 1, col = initialCol - 1; row > -1 && col > 0; row--, col--) {		
+			// Order is important here. There has to be a caslting square check. If found return true, else proceed to checking if black rook can move any further. If not, return false
+			// for not finding a castling square.
+			if (kingSideCastling) {
+				if (blackCastlingSquares [row, col] == "KS" || blackCastlingSquares [row, col] == "BS") {
+					return true;
+				}
+			}
+			if (!kingSideCastling) {
+				if (blackCastlingSquares [row, col] == "QS" || blackCastlingSquares [row, col] == "BS") {
+					return true;
+				}
+			}
+			if (tempBoard [row, col][0]== 'B' || tempBoard [row, col][0] == 'W') {
+				break;
+			}
+		}
+		// search up
+		for (int row = initialRow - 1; row > -1; row--) {		
+			// Order is important here. There has to be a caslting square check. If found return true, else proceed to checking if black rook can move any further. If not, return false
+			// for not finding a castling square.
+			if (kingSideCastling) {
+				if (blackCastlingSquares [row, initialCol] == "KS" || blackCastlingSquares [row, initialCol] == "BS") {
+					return true;
+				}
+			}
+			if (!kingSideCastling) {
+				if (blackCastlingSquares [row, initialCol] == "QS" || blackCastlingSquares [row, initialCol] == "BS") {
+					return true;
+				}
+			}
+			if (tempBoard [row, initialCol][0]== 'B' || tempBoard [row, initialCol][0] == 'W') {
+				break;
+			}
+		}
+		// search left
+		for (int col = initialCol - 1; col > -1; col++) {
+
+			if (kingSideCastling) {
+				if (blackCastlingSquares [col, initialCol] == "KS" || blackCastlingSquares [col, initialCol] == "BS") {
+					return true;
+				}
+			}
+			if (!kingSideCastling) {
+				if (blackCastlingSquares [col, initialCol] == "QS" || blackCastlingSquares [col, initialCol] == "BS") {
+					return true;
+				}
+			}
+			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
+				break;
+			}
+		}
+		// search right
+		for (int col = initialCol + 1; col < 8; col++) {
+
+			if (kingSideCastling) {
+				if (blackCastlingSquares [col, initialCol] == "KS" || blackCastlingSquares [col, initialCol] == "BS") {
+					return true;
+				}
+			}
+			if (!kingSideCastling) {
+				if (blackCastlingSquares [col, initialCol] == "QS" || blackCastlingSquares [col, initialCol] == "BS") {
+					return true;
+				}
+			}
+			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
+				break;
+			}
+		}
+		return false;
+	}
+	bool WhiteKingPreventsCastling (bool kingSideCastling, string[,] tempBoard) {
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				if (tempBoard [row, col] == "WK") {
+					if (kingSideCastling) {
+						if (col - 1 > -1 && (blackCastlingSquares [row, col - 1] == "KS" || blackCastlingSquares [row, col - 1] == "BS")) {
+							return true;
+						}
+						if (row - 1 > -1 && col - 1 > -1 && (blackCastlingSquares [row - 1, col - 1] == "KS" || blackCastlingSquares [row - 1, col - 1] == "BS")) {
+							return true;
+						}
+						if (row - 1 > -1 && (blackCastlingSquares [row - 1, col] == "KS" || blackCastlingSquares [row - 1, col] == "BS")) {
+							return true;
+						}
+						if (row - 1 > -1 && col + 1 < 8 && (blackCastlingSquares [row - 1, col + 1] == "KS" || blackCastlingSquares [row - 1, col + 1] == "BS")) {
+							return true;
+						}
+						if (col + 1 < 8 && (blackCastlingSquares [row, col + 1] == "KS" || blackCastlingSquares [row, col + 1] == "BS")) {
+							return true;
+						}
+					} else {
+						if (col - 1 > -1 && (blackCastlingSquares [row, col - 1] == "QS" || blackCastlingSquares [row, col - 1] == "BS")) {
+							return true;
+						}
+						if (row - 1 > -1 && col - 1 > -1 && (blackCastlingSquares [row - 1, col - 1] == "QS" || blackCastlingSquares [row - 1, col - 1] == "BS")) {
+							return true;
+						}
+						if (row - 1 > -1 && (blackCastlingSquares [row - 1, col] == "QS" || blackCastlingSquares [row - 1, col] == "BS")) {
+							return true;
+						}
+						if (row - 1 > -1 && col + 1 < 8 && (blackCastlingSquares [row - 1, col + 1] == "QS" || blackCastlingSquares [row - 1, col + 1] == "BS")) {
+							return true;
+						}
+						if (col + 1 < 8 && (blackCastlingSquares [row, col + 1] == "QS" || blackCastlingSquares [row, col + 1] == "BS")) {
+							return true;
+						}
+					}
+
+				}
+			}
+		}
+
 		return false;
 	}
 	bool BlackKingTest2 (int selectRow, int selectCol, int destRow, int destCol) {
@@ -3028,8 +3396,6 @@ public class GameManager : MonoBehaviour {
 	bool BlackPawnTest2 (int selectRow, int selectCol, int destRow, int destCol) {
 		string[,] tempBoard = new string[8, 8];
 		CopyBoardToTemp (out tempBoard);
-
-		bool test2 = false;
 
 		// Even if pawn promotes, doesn't change whether or not white king will or will not be captured by pawn move.
 		tempBoard [selectRow, selectCol] = "--";
