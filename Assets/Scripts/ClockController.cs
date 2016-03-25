@@ -16,7 +16,7 @@ public class ClockController : MonoBehaviour {
 	public Text TimeWhiteText;
 	public Text TimeBlackText;
 
-	public enum StartClockState {Wait, ForWhite, ForBlack, WhiteFlags, BlackFlags};
+	public enum StartClockState {Wait, ForWhite, ForBlack, WhiteFlags, BlackFlags, GameDone};
 
 	public StartClockState clockState = StartClockState.Wait;
 

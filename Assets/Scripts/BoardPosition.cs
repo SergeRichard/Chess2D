@@ -45,13 +45,13 @@ public class BoardPosition
 
 	}
 	public void AddBlackWinToNotation() {
-		moveNotation += "\n\n0-1";
+		moveNotation += "\n0-1";
 	}
 	public void AddWhiteWinToNotation() {
-		moveNotation += "\n\n1-0";
+		moveNotation += "\n1-0";
 	}
 	public void AddDrawToNotation() {
-		moveNotation += "\n\n½-½";
+		moveNotation += "\n½-½";
 	}
 }
 

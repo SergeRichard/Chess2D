@@ -316,16 +316,19 @@ public class GameManager : MonoBehaviour {
 		Debug.Log ("Inside GameDrawn");
 		boardPositions [plyMove].AddDrawToNotation ();
 		RefreshMoveNotationBoard ();
+		clockController.clockState = ClockController.StartClockState.GameDone;
 	}
 	void WhiteWon() {
 		Debug.Log ("Inside WhiteWon");
 		boardPositions [plyMove].AddWhiteWinToNotation();
 		RefreshMoveNotationBoard ();
+		clockController.clockState = ClockController.StartClockState.GameDone;
 	}
 	void BlackWon() {
 		Debug.Log ("Inside BlackWon");
 		boardPositions [plyMove].AddBlackWinToNotation();
 		RefreshMoveNotationBoard ();
+		clockController.clockState = ClockController.StartClockState.GameDone;
 	}
 
 	#endregion
@@ -337,6 +340,18 @@ public class GameManager : MonoBehaviour {
 			inputState = InputState.SquareIsClicked;
 			DirectToState ();
 		}
+	}
+	public void OnResignButtonClicked() {
+		if (state != State.BlackWon && state != State.WhiteWon && state != State.GameDrawn) {
+			if (state == State.WhiteSelectionState) {
+				state = State.BlackWon;
+			}
+			if (state == State.BlackSelectionState) {
+				state = State.WhiteWon;
+			}
+			DirectToState ();
+		}
+
 	}
 	public void WhiteFlags() {
 		state = State.BlackWon;
