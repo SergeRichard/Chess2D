@@ -14,15 +14,13 @@ public class GameManager : MonoBehaviour {
 		CheckIfLegalWhiteMoveState, 
 		PromoteWhitePawn,
 		MoveWhitePieceState,
-		CheckIfWhiteMatesState, 
-		CheckIfWhiteStaleMatesState,
+		WhiteGameAssessmentState,
 		BlackSelectionState, 
 		BlackDestinationState,
 		CheckIfLegalBlackMoveState,
 		PromoteBlackPawn,
 		MoveBlackPieceState,
-		CheckIfBlackMatesState, 
-		CheckIfBlackStaleMatesState,
+		BlackGameAssessmentState,
 		GameDrawn,
 		WhiteWon,
 		BlackWon
@@ -45,6 +43,7 @@ public class GameManager : MonoBehaviour {
 	private List<Square> squares = new List<Square>();
 	public ClockController clockController;
 	public Text moveNotationText;
+	private int legalMoveAmount; 
 
 	public PromotionController promotionController;
 
@@ -106,6 +105,7 @@ public class GameManager : MonoBehaviour {
 			//////////////////
 			// White States //
 			//////////////////
+
 			case State.WhiteSelectionState:
 				WhiteSelectionState ();
 				break;
@@ -121,15 +121,14 @@ public class GameManager : MonoBehaviour {
 			case State.MoveWhitePieceState:
 				MoveWhitePieceState ();
 				break;
-			case State.CheckIfWhiteMatesState:
-				CheckIfWhiteMatesState ();
-				break;
-			case State.CheckIfWhiteStaleMatesState:
-				CheckIfWhiteStaleMatesState ();
+			case State.WhiteGameAssessmentState:
+				WhiteGameAssessmentState ();
 				break;
 			//////////////////
 			// Black States //
 			//////////////////
+
+
 			case State.BlackSelectionState:
 				BlackSelectionState ();
 				break;
@@ -146,11 +145,8 @@ public class GameManager : MonoBehaviour {
 			case State.MoveBlackPieceState:
 				MoveBlackPieceState ();
 				break;
-			case State.CheckIfBlackMatesState:
-				CheckIfBlackMatesState ();
-				break;
-			case State.CheckIfBlackStaleMatesState:
-				CheckIfBlackStaleMatesState ();
+			case State.BlackGameAssessmentState:
+				BlackGameAssessmentState ();
 				break;
 			case State.WhiteWon:
 				WhiteWon ();
@@ -205,7 +201,7 @@ public class GameManager : MonoBehaviour {
 		if (legal && state != State.PromoteWhitePawn) {
 			state = State.MoveWhitePieceState;
 
-		} else if (state != State.PromoteWhitePawn){
+		} else if (state != State.PromoteWhitePawn) {
 			Debug.Log ("Illegal move!");
 
 			state = State.WhiteSelectionState;
@@ -220,34 +216,34 @@ public class GameManager : MonoBehaviour {
 	void MoveWhitePieceState() {
 		Debug.Log ("Inside MoveWhitePieceState");
 		MovePieceToDestination ();
-		state = State.CheckIfWhiteMatesState;
+		state = State.WhiteGameAssessmentState;
 		clockController.clockState = ClockController.StartClockState.ForBlack;
 		DirectToState ();	
 
 	}
-	void CheckIfWhiteMatesState() {
-		Debug.Log ("Inside CheckIfWhiteMatesState");
-		bool mates = CheckIfWhiteMates ();
-		if (mates) {
-			state = State.WhiteWon;
-			DirectToState ();
-		} else {
-			state = State.CheckIfWhiteStaleMatesState;
-			DirectToState ();
+	void WhiteGameAssessmentState() {
+		Debug.Log ("Inside WhiteGameAssessmentState");
+		BoardPosition.kingInCheck = BlackKingInCheck ();
+		if (BoardPosition.kingInCheck) {
+			boardPositions [plyMove].AddCheckToNotation ();
+			RefreshMoveNotationBoard ();
 		}
-	}
-	void CheckIfWhiteStaleMatesState() {
-		Debug.Log ("Inside CheckIfWhiteStaleMatesState");
-		bool staleMates = CheckIfWhiteHasStaleMated ();
-		if (staleMates) {
-			state = State.GameDrawn;
 
-		} else {
-			state = State.BlackSelectionState;
+		bool blackHasLegalMovesLeft = BlackHasLegalMovesLeft ();
+
+		var nextState = State.BlackSelectionState;
+
+
+		if (BoardPosition.kingInCheck && !blackHasLegalMovesLeft) {
+			nextState = State.WhiteWon;
 		}
+		if (!BoardPosition.kingInCheck && !blackHasLegalMovesLeft) {
+			nextState = State.GameDrawn;
+		}
+		BoardPosition.kingInCheck = false; // reset check flag
+		state = nextState;
 		DirectToState ();
 	}
-
 	void BlackSelectionState() {
 		Debug.Log ("Inside BlackSelectionState");
 		if (inputState == InputState.SquareIsClicked) {
@@ -291,41 +287,45 @@ public class GameManager : MonoBehaviour {
 	void MoveBlackPieceState() {
 		Debug.Log ("Inside MoveBlackPieceState");
 		MovePieceToDestination ();
-		state = State.CheckIfBlackMatesState;
+		state = State.BlackGameAssessmentState;
 		clockController.clockState = ClockController.StartClockState.ForWhite;
 		DirectToState ();
 	}
-	void CheckIfBlackMatesState() {
-		Debug.Log ("Inside CheckIfBlackMatesState");
-		bool mates = CheckIfBlackMates ();
-		if (mates) {
-			state = State.BlackWon;
-			DirectToState ();
-		} else {
-			state = State.CheckIfBlackStaleMatesState;
-			DirectToState ();
+	void BlackGameAssessmentState() {
+		Debug.Log ("Inside BlackGameAssessmentState");
+		BoardPosition.kingInCheck = WhiteKingInCheck ();
+		if (BoardPosition.kingInCheck) {
+			boardPositions [plyMove].AddCheckToNotation ();
+			RefreshMoveNotationBoard ();
 		}
-	}
-	void CheckIfBlackStaleMatesState() {
-		Debug.Log ("Inside CheckIfBlackStaleMatesState");
-		bool staleMates = CheckIfBlackHasStaleMated ();
-		if (staleMates) {
-			state = State.GameDrawn;
 
-		} else {
-			state = State.WhiteSelectionState;
+		bool whiteHasLegalMovesLeft = WhiteHasLegalMovesLeft ();
+		var nextState = State.WhiteSelectionState;
+		if (BoardPosition.kingInCheck && !whiteHasLegalMovesLeft) {
+			nextState = State.BlackWon;
 		}
+		if (!BoardPosition.kingInCheck && !whiteHasLegalMovesLeft) {
+			nextState = State.GameDrawn;
+		}
+		BoardPosition.kingInCheck = false; // reset check flag
+
+		state = nextState;
 		DirectToState ();
 	}
-
 	void GameDrawn() {
 		Debug.Log ("Inside GameDrawn");
+		boardPositions [plyMove].AddDrawToNotation ();
+		RefreshMoveNotationBoard ();
 	}
 	void WhiteWon() {
 		Debug.Log ("Inside WhiteWon");
+		boardPositions [plyMove].AddWhiteWinToNotation();
+		RefreshMoveNotationBoard ();
 	}
 	void BlackWon() {
 		Debug.Log ("Inside BlackWon");
+		boardPositions [plyMove].AddBlackWinToNotation();
+		RefreshMoveNotationBoard ();
 	}
 
 	#endregion
@@ -362,6 +362,1554 @@ public class GameManager : MonoBehaviour {
 	}
 	#endregion
 	#region helper functions
+	bool BlackKingInCheck() {
+
+		return !WhiteResponseTest (boardPositions [plyMove].piecesOnBoard);
+	}
+	bool BlackHasLegalMovesLeft() {
+		
+		bool anyLegalBlackPawnMoves = AnyLegalBlackPawnMoves ();
+		bool anyLegalBlackRookMoves = AnyLegalBlackRookMoves ();
+		bool anyLegalBlackKnightMoves = AnyLegalBlackKnightMoves ();
+		bool anyLegalBlackBishopMoves = AnyLegalBlackBishopMoves ();
+		bool anyLegalBlackQueenMoves = AnyLegalBlackQueenMoves ();
+		bool anyLegalBlackKingMoves = AnyLegalBlackKingMoves ();
+
+		return anyLegalBlackPawnMoves || anyLegalBlackKnightMoves || anyLegalBlackRookMoves || anyLegalBlackBishopMoves || anyLegalBlackQueenMoves || anyLegalBlackKingMoves;
+	}
+	bool AnyLegalBlackPawnMoves() {
+		string[,] tempBoard = new string[8, 8];
+
+
+		for (int selectRow = 0; selectRow < 8; selectRow++) {
+			for (int selectCol = 0; selectCol < 8; selectCol++) {
+				if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] == "BP") {
+					if (selectRow == 1) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol] == "--" && boardPositions [plyMove].piecesOnBoard [selectRow + 2, selectCol] == "--") {
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + 2, selectCol] = "BP";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // yes, this move is legal, return true
+							}
+						}
+					}
+
+					if (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol] == "--") {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 1, selectCol] = "BP";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // yes, this move is legal, return true
+						}
+					}
+					if (selectCol > 0) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol - 1] [0] == 'W') {
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + 1, selectCol - 1] = "BP";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // yes, this move is legal, return true
+							}
+						}
+					}
+					if (selectCol < 7) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol + 1] [0] == 'W') {
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + 1, selectCol + 1] = "BP";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // yes, this move is legal, return true
+							}
+						}
+					}
+					if (selectCol > 0 && selectRow == 4) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol - 1] [0] == 'W' && BoardPosition.blackTakesEnPassantFlag && BoardPosition.enPassantCol == selectCol - 1) {
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol - 1] = "--";
+							tempBoard [selectRow + 1, selectCol - 1] = "BP";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // yes, this move is legal, return true
+							}
+						}
+					}
+					if (selectCol < 7 && selectRow == 4) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + 1] [0] == 'W' && BoardPosition.blackTakesEnPassantFlag && BoardPosition.enPassantCol == selectCol + 1) {
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + 1] = "--";
+							tempBoard [selectRow + 1, selectCol + 1] = "BP";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // yes, this move is legal, return true
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+	bool AnyLegalBlackRookMoves() {
+		string[,] tempBoard = new string[8, 8];
+
+		for (int selectRow = 0; selectRow < 8; selectRow++) {
+			for (int selectCol = 0; selectCol < 8; selectCol++) {
+
+				if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] == "BR") {
+					// if rook wants to move up
+					for (int row = -1; row + selectRow > -1; row--) {
+					
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					// if rook wants to move down
+					for (int row = 1; row + selectRow < 8; row++) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					// if rook wants to moves right
+					for (int col = 1; col + selectCol < 8; col++) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					// if rook wants to moves left
+					for (int col = -1; col + selectCol > -1; col--) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+				}
+			}
+
+		}
+		return false;
+	}
+	bool AnyLegalBlackKnightMoves() {
+		string[,] tempBoard = new string[8, 8];
+
+		for (int selectRow = 0; selectRow < 8; selectRow++) {
+			for (int selectCol = 0; selectCol < 8; selectCol++) {
+				if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] == "BN") {
+					if (selectRow > 0 && selectCol > 1 && (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol - 2] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol - 2] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 1, selectCol - 2] = "BN";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow > 1 && selectCol > 0 && (boardPositions [plyMove].piecesOnBoard [selectRow - 2, selectCol - 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow - 2, selectCol - 1] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 2, selectCol - 1] = "BN";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow > 1 && selectCol < 7 && (boardPositions [plyMove].piecesOnBoard [selectRow - 2, selectCol + 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow - 2, selectCol + 1] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 2, selectCol + 1] = "BN";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow > 0 && selectCol < 6 && (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol + 2] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol + 2] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 1, selectCol + 2] = "BN";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow < 7 && selectCol < 6 && (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol + 2] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol + 2] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 1, selectCol + 2] = "BN";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow < 6 && selectCol < 7 && (boardPositions [plyMove].piecesOnBoard [selectRow + 2, selectCol + 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 2, selectCol + 1] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 2, selectCol + 1] = "BN";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow < 6 && selectCol > 0 && (boardPositions [plyMove].piecesOnBoard [selectRow + 2, selectCol - 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 2, selectCol - 1] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 2, selectCol - 1] = "BN";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow < 7 && selectCol > 1 && (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol - 2] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol - 2] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 1, selectCol - 2] = "BN";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+	bool AnyLegalBlackBishopMoves() {
+		string[,] tempBoard = new string[8, 8];
+		int row, col;
+
+		for (int selectRow = 0; selectRow < 8; selectRow++) {
+			for (int selectCol = 0; selectCol < 8; selectCol++) {
+				if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] == "BB") {
+					row = selectRow;
+					col = selectCol;
+					row--;
+					col--;
+					while (row > -1 && col > -1) {
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						row--;
+						col--;
+
+					}
+					row = selectRow;
+					col = selectCol;
+					row--;
+					col++;
+					while (row > -1 && col < 8) {
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						row--;
+						col++;
+					}
+					row = selectRow;
+					col = selectCol;
+					row++;
+					col++;
+					while (row < 8 && col < 8) {
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						row++;
+						col++;
+					}
+					row = selectRow;
+					col = selectCol;
+					row++;
+					col--;
+					while (row < 8 && col > -1) {
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						row++;
+						col--;
+					}
+				}
+			}
+
+		}
+		return false;
+	}
+	bool AnyLegalBlackQueenMoves() {
+		string[,] tempBoard = new string[8, 8];
+		int rw, cl;
+
+		for (int selectRow = 0; selectRow < 8; selectRow++) {
+			for (int selectCol = 0; selectCol < 8; selectCol++) {
+				if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] == "BQ") {
+					// if rook wants to move up
+					for (int row = -1; row + selectRow > -1; row--) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					// if rook wants to move down
+					for (int row = 1; row + selectRow < 8; row++) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					// if rook wants to moves right
+					for (int col = 1; col + selectCol < 8; col++) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					// if rook wants to moves left
+					for (int col = -1; col + selectCol > -1; col--) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "BR";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					rw = selectRow;
+					cl = selectCol;
+					rw--;
+					cl--;
+					while (rw > -1 && cl > -1) {
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						rw--;
+						cl--;
+
+					}
+					rw = selectRow;
+					cl = selectCol;
+					rw--;
+					cl++;
+					while (rw > -1 && cl < 8) {
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						rw--;
+						cl++;
+					}
+					rw = selectRow;
+					cl = selectCol;
+					rw++;
+					cl++;
+					while (rw < 8 && cl < 8) {
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						rw++;
+						cl++;
+					}
+					rw = selectRow;
+					cl = selectCol;
+					rw++;
+					cl--;
+					while (rw < 8 && cl > -1) {
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'W') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'B') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "BB";
+							if (WhiteResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+						}
+						rw++;
+						cl--;
+					}
+				}
+			}
+
+		}
+		return false;
+	}
+	bool AnyLegalBlackKingMoves() {
+		string[,] tempBoard = new string[8, 8];
+
+		for (int selectRow = 0; selectRow < 8; selectRow++) {
+			for (int selectCol = 0; selectCol < 8; selectCol++) {
+				if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] == "BK") {
+					// King wants to move 1 up and 1 left
+					if (selectRow > 0 && selectCol > 0 && (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol - 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 1, selectCol - 1] = "BK";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 up
+					if (selectRow > 0 && (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 1, selectCol] = "BK";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 up and 1 right
+					if (selectRow > 0 && selectCol < 7 && (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol + 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol + 1] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 1, selectCol + 1] = "BK";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 right
+					if (selectRow > 0 && selectCol < 7 && (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + 1] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow, selectCol + 1] = "BK";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 right and 1 down
+					if (selectRow < 7 && selectCol < 7 && (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol + 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol + 1] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 1, selectCol + 1] = "BK";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 down
+					if (selectRow < 7 && (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 1, selectCol] = "BK";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 left and 1 down
+					if (selectRow < 7 && selectCol > 0 && (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol - 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol - 1] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 1, selectCol - 1] = "BK";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 left
+					if (selectCol > 0 && (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol - 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow, selectCol - 1] [0] == 'W')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow, selectCol - 1] = "BK";
+						if (WhiteResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow == 0 && selectCol == 4) {
+						// King wants to castle king side
+						if (boardPositions [plyMove].piecesOnBoard [0, selectCol + 1] == "--" && boardPositions [plyMove].piecesOnBoard [0, selectCol + 2] == "--" && boardPositions [plyMove].piecesOnBoard [0, selectCol + 3] == "BR" && BoardPosition.whiteKingSideCastling) {
+							if (WhiteKingSideCastlingTest (selectRow, selectCol, 0, selectCol + 2)) {
+								CopyBoardToTemp (out tempBoard);
+								tempBoard [0, selectCol] = "--";
+								tempBoard [0, selectCol - 4] = "--";
+								tempBoard [0, selectCol + 2] = "BK";
+								tempBoard [0, selectCol + 1] = "BR";
+								if (WhiteResponseTest (tempBoard)) {
+									return true; // at least one legal move found, return true
+								} 
+							}
+						}
+						// King wants to castle queen side
+						if (boardPositions [plyMove].piecesOnBoard [0, selectCol - 1] == "--" && boardPositions [plyMove].piecesOnBoard [0, selectCol - 2] == "--"
+						   && boardPositions [plyMove].piecesOnBoard [0, selectCol - 3] == "--" && boardPositions [plyMove].piecesOnBoard [0, selectCol - 4] == "BR" && BoardPosition.whiteQueenSideCastling) {
+							if (WhiteQueenSideCastlingTest (0, selectCol, 0, selectCol - 2)) {
+								CopyBoardToTemp (out tempBoard);
+								tempBoard [0, selectCol] = "--";
+								tempBoard [0, selectCol - 4] = "--";
+								tempBoard [0, selectCol - 2] = "BK";
+								tempBoard [0, selectCol - 1] = "BR";
+								if (WhiteResponseTest (tempBoard)) {
+									return true; // at least one legal move found, return true
+								} 
+							}
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+	bool WhiteKingInCheck() {
+		return !BlackResponseTest (boardPositions [plyMove].piecesOnBoard);
+	}
+	bool WhiteHasLegalMovesLeft() {
+		bool anyLegalWhitePawnMoves = AnyLegalWhitePawnMoves ();
+		bool anyLegalWhiteRookMoves = AnyLegalWhiteRookMoves ();
+		bool anyLegalWhiteKnightMoves = AnyLegalWhiteKnightMoves ();
+		bool anyLegalWhiteBishopMoves = AnyLegalWhiteBishopMoves ();
+		bool anyLegalWhiteQueenMoves = AnyLegalWhiteQueenMoves ();
+		bool anyLegalWhiteKingMoves = AnyLegalWhiteKingMoves ();
+
+		return anyLegalWhitePawnMoves || anyLegalWhiteKnightMoves || anyLegalWhiteRookMoves || anyLegalWhiteBishopMoves || anyLegalWhiteQueenMoves || anyLegalWhiteKingMoves;
+	}
+	bool AnyLegalWhitePawnMoves() {
+		// WhitePawnTest2 (int selectRow, int selectCol, int destRow, int destCol)		
+
+		// todo: modify the tempBoard before sending to BlackResponseTest
+		string[,] tempBoard = new string[8, 8];
+
+
+		for (int selectRow = 0; selectRow < 8; selectRow++) {
+			for (int selectCol = 0; selectCol < 8; selectCol++) {
+				if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] == "WP") {
+					if (selectRow == 6) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol] == "--" && boardPositions [plyMove].piecesOnBoard [selectRow - 2, selectCol] == "--") {
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow - 2, selectCol] = "WP";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // yes, this move is legal, return true
+							}
+						}
+					}
+
+					if (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol] == "--") {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 1, selectCol] = "WP";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // yes, this move is legal, return true
+						}
+					}
+					if (selectCol > 0) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol - 1] [0] == 'B') {
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow - 1, selectCol - 1] = "WP";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // yes, this move is legal, return true
+							}
+						}
+					}
+					if (selectCol < 7) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol + 1] [0] == 'B') {
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow - 1, selectCol + 1] = "WP";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // yes, this move is legal, return true
+							}
+						}
+					}
+					if (selectCol > 0 && selectRow == 3) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol - 1] [0] == 'B' && BoardPosition.blackTakesEnPassantFlag && BoardPosition.enPassantCol == selectCol - 1) {
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol - 1] = "--";
+							tempBoard [selectRow - 1, selectCol - 1] = "WP";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // yes, this move is legal, return true
+							}
+						}
+					}
+					if (selectCol < 7 && selectRow == 3) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + 1] [0] == 'B' && BoardPosition.blackTakesEnPassantFlag && BoardPosition.enPassantCol == selectCol + 1) {
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + 1] = "--";
+							tempBoard [selectRow - 1, selectCol + 1] = "WP";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // yes, this move is legal, return true
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+	bool AnyLegalWhiteRookMoves() {
+		string[,] tempBoard = new string[8, 8];
+
+		for (int selectRow = 0; selectRow < 8; selectRow++) {
+			for (int selectCol = 0; selectCol < 8; selectCol++) {
+				if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] == "WR") {
+					// if rook wants to move up
+					for (int row = -1; row + selectRow > -1; row--) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					// if rook wants to move down
+					for (int row = 1; row + selectRow < 8; row++) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					// if rook wants to moves right
+					for (int col = 1; col + selectCol < 8; col++) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					// if rook wants to moves left
+					for (int col = -1; col + selectCol > -1; col--) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+				}
+			}
+
+		}
+		return false;
+	}
+	bool AnyLegalWhiteKnightMoves() {
+		string[,] tempBoard = new string[8, 8];
+
+		for (int selectRow = 0; selectRow < 8; selectRow++) {
+			for (int selectCol = 0; selectCol < 8; selectCol++) {
+				if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] == "WN") {
+					if (selectRow > 0 && selectCol > 1 && (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol - 2] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol - 2] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 1, selectCol - 2] = "WN";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow > 1 && selectCol > 0 && (boardPositions [plyMove].piecesOnBoard [selectRow - 2, selectCol - 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow - 2, selectCol - 1] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 2, selectCol - 1] = "WN";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow > 1 && selectCol < 7 && (boardPositions [plyMove].piecesOnBoard [selectRow - 2, selectCol + 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow - 2, selectCol + 1] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 2, selectCol + 1] = "WN";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow > 0 && selectCol < 6 && (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol + 2] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol + 2] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 1, selectCol + 2] = "WN";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow < 7 && selectCol < 6 && (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol + 2] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol + 2] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 1, selectCol + 2] = "WN";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow < 6 && selectCol < 7 && (boardPositions [plyMove].piecesOnBoard [selectRow + 2, selectCol + 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 2, selectCol + 1] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 2, selectCol + 1] = "WN";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow < 6 && selectCol > 0 && (boardPositions [plyMove].piecesOnBoard [selectRow + 2, selectCol - 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 2, selectCol - 1] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 2, selectCol - 1] = "WN";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow < 7 && selectCol > 1 && (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol - 2] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol - 2] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 1, selectCol - 2] = "WN";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+	bool AnyLegalWhiteBishopMoves() {
+		string[,] tempBoard = new string[8, 8];
+		int row, col;
+
+		for (int selectRow = 0; selectRow < 8; selectRow++) {
+			for (int selectCol = 0; selectCol < 8; selectCol++) {
+				if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] == "WB") {
+					row = selectRow;
+					col = selectCol;
+					row--;
+					col--;
+					while (row > -1 && col > -1) {
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						row--;
+						col--;
+
+					}
+					row = selectRow;
+					col = selectCol;
+					row--;
+					col++;
+					while (row > -1 && col < 8) {
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						row--;
+						col++;
+					}
+					row = selectRow;
+					col = selectCol;
+					row++;
+					col++;
+					while (row < 8 && col < 8) {
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						row++;
+						col++;
+					}
+					row = selectRow;
+					col = selectCol;
+					row++;
+					col--;
+					while (row < 8 && col > -1) {
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [row, col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [row, col] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						row++;
+						col--;
+					}
+				}
+			}
+
+		}
+		return false;
+	}
+	bool AnyLegalWhiteQueenMoves() {
+		string[,] tempBoard = new string[8, 8];
+		int rw, cl;
+
+		for (int selectRow = 0; selectRow < 8; selectRow++) {
+			for (int selectCol = 0; selectCol < 8; selectCol++) {
+				if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] == "WQ") {
+					// if rook wants to move up
+					for (int row = -1; row + selectRow > -1; row--) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					// if rook wants to move down
+					for (int row = 1; row + selectRow < 8; row++) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow + row, selectCol] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow + row, selectCol] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					// if rook wants to moves right
+					for (int col = 1; col + selectCol < 8; col++) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					// if rook wants to moves left
+					for (int col = -1; col + selectCol > -1; col--) {
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + col] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [selectRow, selectCol + col] = "WR";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+					}
+					rw = selectRow;
+					cl = selectCol;
+					rw--;
+					cl--;
+					while (rw > -1 && cl > -1) {
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						rw--;
+						cl--;
+
+					}
+					rw = selectRow;
+					cl = selectCol;
+					rw--;
+					cl++;
+					while (rw > -1 && cl < 8) {
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						rw--;
+						cl++;
+					}
+					rw = selectRow;
+					cl = selectCol;
+					rw++;
+					cl++;
+					while (rw < 8 && cl < 8) {
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+
+						}
+						rw++;
+						cl++;
+					}
+					rw = selectRow;
+					cl = selectCol;
+					rw++;
+					cl--;
+					while (rw < 8 && cl > -1) {
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'B') { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} else {
+								break;
+							}
+
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] [0] == 'W') { 							
+							break;
+						}
+						if (boardPositions [plyMove].piecesOnBoard [rw, cl] == "--") { 
+							CopyBoardToTemp (out tempBoard);
+							tempBoard [selectRow, selectCol] = "--";
+							tempBoard [rw, cl] = "WB";
+							if (BlackResponseTest (tempBoard)) {
+								return true; // at least one legal move found, return true
+							} 
+						}
+						rw++;
+						cl--;
+					}
+				}
+			}
+
+		}
+		return false;
+	}
+	bool AnyLegalWhiteKingMoves() {
+		string[,] tempBoard = new string[8, 8];
+
+		for (int selectRow = 0; selectRow < 8; selectRow++) {
+			for (int selectCol = 0; selectCol < 8; selectCol++) {
+				if (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] == "WK") {
+					// King wants to move 1 up and 1 left
+					if (selectRow > 0 && selectCol > 0 && (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol - 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow, selectCol] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 1, selectCol - 1] = "WK";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 up
+					if (selectRow > 0 && (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 1, selectCol] = "WK";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 up and 1 right
+					if (selectRow > 0 && selectCol < 7 && (boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol + 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow - 1, selectCol + 1] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow - 1, selectCol + 1] = "WK";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 right
+					if (selectRow > 0 && selectCol < 7 && (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow, selectCol + 1] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow, selectCol + 1] = "WK";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 right and 1 down
+					if (selectRow < 7 && selectCol < 7 && (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol + 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol + 1] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 1, selectCol + 1] = "WK";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 down
+					if (selectRow < 7 && (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 1, selectCol] = "WK";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 left and 1 down
+					if (selectRow < 7 && selectCol > 0 && (boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol - 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow + 1, selectCol - 1] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow + 1, selectCol - 1] = "WK";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					// King wants to move 1 left
+					if (selectCol > 0 && (boardPositions [plyMove].piecesOnBoard [selectRow, selectCol - 1] == "--" || boardPositions [plyMove].piecesOnBoard [selectRow, selectCol - 1] [0] == 'B')) {
+						CopyBoardToTemp (out tempBoard);
+						tempBoard [selectRow, selectCol] = "--";
+						tempBoard [selectRow, selectCol - 1] = "WK";
+						if (BlackResponseTest (tempBoard)) {
+							return true; // at least one legal move found, return true
+						} 
+					}
+					if (selectRow == 7 && selectCol == 4) {
+						// King wants to castle king side
+						if (boardPositions [plyMove].piecesOnBoard [7, selectCol + 1] == "--" && boardPositions [plyMove].piecesOnBoard [7, selectCol + 2] == "--" && boardPositions [plyMove].piecesOnBoard [7, selectCol + 3] == "WR" && BoardPosition.whiteKingSideCastling) {
+							if (WhiteKingSideCastlingTest (7, selectCol, 7, selectCol + 2)) {
+								CopyBoardToTemp (out tempBoard);
+								tempBoard [7, selectCol] = "--";
+								tempBoard [7, selectCol - 4] = "--";
+								tempBoard [7, selectCol + 2] = "WK";
+								tempBoard [7, selectCol + 1] = "WR";
+								if (BlackResponseTest (tempBoard)) {
+									return true; // at least one legal move found, return true
+								} 
+							}
+						}
+						// King wants to castle queen side
+						if (boardPositions [plyMove].piecesOnBoard [7, selectCol - 1] == "--" && boardPositions [plyMove].piecesOnBoard [7, selectCol - 2] == "--"
+						   && boardPositions [plyMove].piecesOnBoard [7, selectCol - 3] == "--" && boardPositions [plyMove].piecesOnBoard [7, selectCol - 4] == "WR" && BoardPosition.whiteQueenSideCastling) {
+							if (WhiteQueenSideCastlingTest (7, selectCol, 7, selectCol - 2)) {
+								CopyBoardToTemp (out tempBoard);
+								tempBoard [7, selectCol] = "--";
+								tempBoard [7, selectCol - 4] = "--";
+								tempBoard [7, selectCol - 2] = "WK";
+								tempBoard [7, selectCol - 1] = "WR";
+								if (BlackResponseTest (tempBoard)) {
+									return true; // at least one legal move found, return true
+								} 
+							}
+						}
+
+					}
+				}
+			}
+		}
+		return false;
+	}
 	void MovePieceToDestination() {
 
 		string selectSquare;
@@ -630,10 +2178,38 @@ public class GameManager : MonoBehaviour {
 				notation += sn.ToLower();
 			}
 		}
+		if (BoardPosition.kingInCheck) {
+			notation += "+";
+		}
+		if (state == State.MoveWhitePieceState) {
+			if (WhiteQueenSideCastling ()) {
+				notation = "O-O-O";
+			}
+			if (WhiteKingSideCastling ()) {
+				notation = "O-O";
+			}
+		}
+		if (state == State.MoveBlackPieceState) {
+			if (BlackQueenSideCastling ()) {
+				notation = "O-O-O";
+			}
+			if (BlackKingSideCastling ()) {
+				notation = "O-O";
+			}
+		}
+		if (WhitePawnPromotes () || BlackPawnPromotes()) {
+			notation += BoardPosition.promotionChoice [1];
+		}
+
 		return notation;
 	}
 	bool PieceIsMoving() {
-
+		if (state == State.MoveWhitePieceState && WhiteTakesEnPassant ()) {
+			return false;
+		}
+		if (state == State.MoveBlackPieceState && BlackTakesEnPassant ()) {
+			return false;
+		}
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
 				if (squareNames [row, col] == destinationSquareName) {
@@ -645,6 +2221,12 @@ public class GameManager : MonoBehaviour {
 		return false;
 	}
 	bool PieceIsAttacking() {
+		if (state == State.MoveWhitePieceState && WhiteTakesEnPassant ()) {
+			return true;
+		}
+		if (state == State.MoveBlackPieceState && BlackTakesEnPassant ()) {
+			return true;
+		}
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
 				if (squareNames [row, col] == destinationSquareName) {
@@ -947,6 +2529,7 @@ public class GameManager : MonoBehaviour {
 	#region white legal moves
 	#region white rook legal functions
 	bool WhiteRookMoveLegal () {
+
 		string selectSquare;
 		int selectCol, selectRow;
 		FindPieceOrSpaceAndLocationOnSquare(selectionSquareName, out selectSquare, out selectRow, out selectCol);
@@ -1038,8 +2621,6 @@ public class GameManager : MonoBehaviour {
 	bool WhiteRookTest2 (int selectRow, int selectCol, int destRow, int destCol) {
 		string[,] tempBoard = new string[8, 8];
 		CopyBoardToTemp (out tempBoard);
-
-		bool test2 = false;
 
 		// Even if pawn promotes, doesn't change whether or not white king will or will not be captured by pawn move.
 		tempBoard [selectRow, selectCol] = "--";
@@ -1619,16 +3200,16 @@ public class GameManager : MonoBehaviour {
 		for (int col = initialCol - 1; col > -1; col++) {
 			
 			if (kingSideCastling) {
-				if (whiteCastlingSquares [col, initialCol] == "KS" || whiteCastlingSquares [col, initialCol] == "BS") {
+				if (whiteCastlingSquares [initialRow, col] == "KS" || whiteCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
 			if (!kingSideCastling) {
-				if (whiteCastlingSquares [col, initialCol] == "QS" || whiteCastlingSquares [col, initialCol] == "BS") {
+				if (whiteCastlingSquares [initialRow, col] == "QS" || whiteCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
-			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
+			if (tempBoard [initialRow, col][0]== 'B' || tempBoard [initialRow, col][0] == 'W') {
 				break;
 			}
 		}
@@ -1636,16 +3217,16 @@ public class GameManager : MonoBehaviour {
 		for (int col = initialCol + 1; col < 8; col++) {
 			
 			if (kingSideCastling) {
-				if (whiteCastlingSquares [col, initialCol] == "KS" || whiteCastlingSquares [col, initialCol] == "BS") {
+				if (whiteCastlingSquares [initialRow, col] == "KS" || whiteCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
 			if (!kingSideCastling) {
-				if (whiteCastlingSquares [col, initialCol] == "QS" || whiteCastlingSquares [col, initialCol] == "BS") {
+				if (whiteCastlingSquares [initialRow, col] == "QS" || whiteCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
-			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
+			if (tempBoard [initialRow, col][0]== 'B' || tempBoard [initialRow, col][0] == 'W') {
 				break;
 			}
 		}
@@ -1819,16 +3400,16 @@ public class GameManager : MonoBehaviour {
 		for (int col = initialCol - 1; col > -1; col++) {
 
 			if (kingSideCastling) {
-				if (whiteCastlingSquares [col, initialCol] == "KS" || whiteCastlingSquares [col, initialCol] == "BS") {
+				if (whiteCastlingSquares [initialRow, col] == "KS" || whiteCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
 			if (!kingSideCastling) {
-				if (whiteCastlingSquares [col, initialCol] == "QS" || whiteCastlingSquares [col, initialCol] == "BS") {
+				if (whiteCastlingSquares [initialRow, col] == "QS" || whiteCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
-			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
+			if (tempBoard [initialRow, col][0]== 'B' || tempBoard [initialRow, col][0] == 'W') {
 				break;
 			}
 		}
@@ -1836,16 +3417,16 @@ public class GameManager : MonoBehaviour {
 		for (int col = initialCol + 1; col < 8; col++) {
 
 			if (kingSideCastling) {
-				if (whiteCastlingSquares [col, initialCol] == "KS" || whiteCastlingSquares [col, initialCol] == "BS") {
+				if (whiteCastlingSquares [initialRow, col] == "KS" || whiteCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
 			if (!kingSideCastling) {
-				if (whiteCastlingSquares [col, initialCol] == "QS" || whiteCastlingSquares [col, initialCol] == "BS") {
+				if (whiteCastlingSquares [initialRow, col] == "QS" || whiteCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
-			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
+			if (tempBoard [initialRow, col][0]== 'B' || tempBoard [initialRow, col][0] == 'W') {
 				break;
 			}
 		}
@@ -1968,8 +3549,6 @@ public class GameManager : MonoBehaviour {
 	bool WhitePawnTest2 (int selectRow, int selectCol, int destRow, int destCol) {
 		string[,] tempBoard = new string[8, 8];
 		CopyBoardToTemp (out tempBoard);
-
-		bool test2 = false;
 
 		// Even if pawn promotes, doesn't change whether or not white king will or will not be captured by pawn move.
 		tempBoard [selectRow, selectCol] = "--";
@@ -3046,16 +4625,16 @@ public class GameManager : MonoBehaviour {
 		for (int col = initialCol - 1; col > -1; col++) {
 
 			if (kingSideCastling) {
-				if (blackCastlingSquares [col, initialCol] == "KS" || blackCastlingSquares [col, initialCol] == "BS") {
+				if (blackCastlingSquares [initialRow, col] == "KS" || blackCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
 			if (!kingSideCastling) {
-				if (blackCastlingSquares [col, initialCol] == "QS" || blackCastlingSquares [col, initialCol] == "BS") {
+				if (blackCastlingSquares [initialRow, col] == "QS" || blackCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
-			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
+			if (tempBoard [initialRow, col][0]== 'B' || tempBoard [initialRow, col][0] == 'W') {
 				break;
 			}
 		}
@@ -3063,16 +4642,16 @@ public class GameManager : MonoBehaviour {
 		for (int col = initialCol + 1; col < 8; col++) {
 
 			if (kingSideCastling) {
-				if (blackCastlingSquares [col, initialCol] == "KS" || blackCastlingSquares [col, initialCol] == "BS") {
+				if (blackCastlingSquares [initialRow, col] == "KS" || blackCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
 			if (!kingSideCastling) {
-				if (blackCastlingSquares [col, initialCol] == "QS" || blackCastlingSquares [col, initialCol] == "BS") {
+				if (blackCastlingSquares [initialRow, col] == "QS" || blackCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
-			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
+			if (tempBoard [initialRow, col][0]== 'B' || tempBoard [initialRow, col][0] == 'W') {
 				break;
 			}
 		}
@@ -3246,16 +4825,16 @@ public class GameManager : MonoBehaviour {
 		for (int col = initialCol - 1; col > -1; col++) {
 
 			if (kingSideCastling) {
-				if (blackCastlingSquares [col, initialCol] == "KS" || blackCastlingSquares [col, initialCol] == "BS") {
+				if (blackCastlingSquares [initialRow, col] == "KS" || blackCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
 			if (!kingSideCastling) {
-				if (blackCastlingSquares [col, initialCol] == "QS" || blackCastlingSquares [col, initialCol] == "BS") {
+				if (blackCastlingSquares [initialRow, col] == "QS" || blackCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
-			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
+			if (tempBoard [initialRow, col][0]== 'B' || tempBoard [initialRow, col][0] == 'W') {
 				break;
 			}
 		}
@@ -3263,16 +4842,16 @@ public class GameManager : MonoBehaviour {
 		for (int col = initialCol + 1; col < 8; col++) {
 
 			if (kingSideCastling) {
-				if (blackCastlingSquares [col, initialCol] == "KS" || blackCastlingSquares [col, initialCol] == "BS") {
+				if (blackCastlingSquares [initialRow, col] == "KS" || blackCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
 			if (!kingSideCastling) {
-				if (blackCastlingSquares [col, initialCol] == "QS" || blackCastlingSquares [col, initialCol] == "BS") {
+				if (blackCastlingSquares [initialRow, col] == "QS" || blackCastlingSquares [initialRow, col] == "BS") {
 					return true;
 				}
 			}
-			if (tempBoard [col, initialCol][0]== 'B' || tempBoard [col, initialCol][0] == 'W') {
+			if (tempBoard [initialRow, col][0]== 'B' || tempBoard [initialRow, col][0] == 'W') {
 				break;
 			}
 		}

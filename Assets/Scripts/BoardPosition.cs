@@ -23,6 +23,7 @@ public class BoardPosition
 	public static bool blackKingSideCastling = true;
 	public static bool whiteTakesEnPassantFlag = false;
 	public static bool blackTakesEnPassantFlag = false;
+	public static bool kingInCheck = false;
 
 
 	public string moveNotation;
@@ -38,6 +39,19 @@ public class BoardPosition
 		blackTakesEnPassant = blackTakesEnPassantFlag;
 		whiteTakesEnPassantCol = enPassantCol;
 		blackTakesEnPassantCol = enPassantCol;
+	}
+	public void AddCheckToNotation() {
+		moveNotation += "+";
+
+	}
+	public void AddBlackWinToNotation() {
+		moveNotation += "\n\n0-1";
+	}
+	public void AddWhiteWinToNotation() {
+		moveNotation += "\n\n1-0";
+	}
+	public void AddDrawToNotation() {
+		moveNotation += "\n\n½-½";
 	}
 }
 
