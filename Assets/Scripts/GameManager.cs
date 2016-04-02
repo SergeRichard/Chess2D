@@ -21,19 +21,30 @@ public class GameManager : MonoBehaviour {
 		PromoteBlackPawn,
 		MoveBlackPieceState,
 		BlackGameAssessmentState,
-		GameDrawn,
-		WhiteWon,
-		BlackWon
+		Stalemate,
+		WhiteMates,
+		BlackMates,
+		WhiteResigns,
+		BlackResigns,
+		WhiteFlags,
+		BlackFlags
 	};
 	enum InputState {
 		WaitingForClick,
 		SquareIsClicked
 	}
+	public enum HumanPlays {
+		White,
+		Black
+	}
+	public static HumanPlays humanPlays = HumanPlays.White;
+	public static int minutes = 5;
 
 	InputState inputState = InputState.WaitingForClick;
 	static string clickedSquareName = "";
 	static string selectionSquareName = "";
 	static string destinationSquareName = "";
+
 	List<BoardPosition> boardPositions = new List<BoardPosition>();
 
 	int plyMove = 0;
@@ -43,6 +54,7 @@ public class GameManager : MonoBehaviour {
 	private List<Square> squares = new List<Square>();
 	public ClockController clockController;
 	public Text moveNotationText;
+	public ResultPopupController ResultPopupController;
 	private int legalMoveAmount; 
 
 	public PromotionController promotionController;
@@ -148,14 +160,26 @@ public class GameManager : MonoBehaviour {
 			case State.BlackGameAssessmentState:
 				BlackGameAssessmentState ();
 				break;
-			case State.WhiteWon:
-				WhiteWon ();
+			case State.WhiteMates:
+				WhiteMates ();
 				break;
-			case State.BlackWon:
-				BlackWon ();
+			case State.BlackMates:
+				BlackMates ();
 				break;
-			case State.GameDrawn:
-				GameDrawn ();
+			case State.Stalemate:
+				Stalemate ();
+				break;
+			case State.WhiteFlags:
+				WhiteFlagsState ();
+				break;
+			case State.BlackFlags:
+				BlackFlagsState ();
+				break;
+			case State.WhiteResigns:
+				WhiteResigns ();
+				break;
+			case State.BlackResigns:
+				BlackResigns ();
 				break;
 			default:
 				Debug.LogError("Invalid State.");
@@ -235,10 +259,10 @@ public class GameManager : MonoBehaviour {
 
 
 		if (BoardPosition.kingInCheck && !blackHasLegalMovesLeft) {
-			nextState = State.WhiteWon;
+			nextState = State.WhiteMates;
 		}
 		if (!BoardPosition.kingInCheck && !blackHasLegalMovesLeft) {
-			nextState = State.GameDrawn;
+			nextState = State.Stalemate;
 		}
 		BoardPosition.kingInCheck = false; // reset check flag
 		state = nextState;
@@ -302,63 +326,93 @@ public class GameManager : MonoBehaviour {
 		bool whiteHasLegalMovesLeft = WhiteHasLegalMovesLeft ();
 		var nextState = State.WhiteSelectionState;
 		if (BoardPosition.kingInCheck && !whiteHasLegalMovesLeft) {
-			nextState = State.BlackWon;
+			nextState = State.BlackMates;
 		}
 		if (!BoardPosition.kingInCheck && !whiteHasLegalMovesLeft) {
-			nextState = State.GameDrawn;
+			nextState = State.Stalemate;
 		}
 		BoardPosition.kingInCheck = false; // reset check flag
 
 		state = nextState;
 		DirectToState ();
 	}
-	void GameDrawn() {
+	void Stalemate() {
 		Debug.Log ("Inside GameDrawn");
 		boardPositions [plyMove].AddDrawToNotation ();
 		RefreshMoveNotationBoard ();
 		clockController.clockState = ClockController.StartClockState.GameDone;
+		ResultPopupController.ShowStalemateWindow ();
 	}
-	void WhiteWon() {
+	void WhiteMates() {
+		Debug.Log ("Inside WhiteWon");
+		boardPositions [plyMove].AddWhiteWinToNotation();
+		RefreshMoveNotationBoard ();
+		clockController.clockState = ClockController.StartClockState.GameDone;
+		ResultPopupController.ShowMateWindow ();
+	}
+	void BlackMates() {
+		Debug.Log ("Inside BlackWon");
+		boardPositions [plyMove].AddBlackWinToNotation();
+		RefreshMoveNotationBoard ();
+		clockController.clockState = ClockController.StartClockState.GameDone;
+		ResultPopupController.ShowMateWindow ();
+	}
+	void BlackResigns() {
 		Debug.Log ("Inside WhiteWon");
 		boardPositions [plyMove].AddWhiteWinToNotation();
 		RefreshMoveNotationBoard ();
 		clockController.clockState = ClockController.StartClockState.GameDone;
 	}
-	void BlackWon() {
+	void WhiteResigns() {
 		Debug.Log ("Inside BlackWon");
 		boardPositions [plyMove].AddBlackWinToNotation();
 		RefreshMoveNotationBoard ();
 		clockController.clockState = ClockController.StartClockState.GameDone;
 	}
-
+	void WhiteFlagsState() {
+		boardPositions [plyMove].AddBlackWinToNotation();
+		RefreshMoveNotationBoard ();
+		clockController.clockState = ClockController.StartClockState.GameDone;
+	}
+	void BlackFlagsState() {
+		boardPositions [plyMove].AddWhiteWinToNotation();
+		RefreshMoveNotationBoard ();
+		clockController.clockState = ClockController.StartClockState.GameDone;
+	}
 	#endregion
 	#region Events
+	public void UpdateHumanPlayerColour() {
+		//humanPlays = 
+	}
 	public void SquareClicked(string squareName) {
 		Debug.Log (squareName + " clicked!");
-		if (!(state == State.BlackWon || state == State.WhiteWon || state == State.GameDrawn)) {
+		if (ResultPopupController.WindowOpen) {
+			ResultPopupController.HideWindow ();
+		}
+		if (state != State.WhiteResigns && state != State.BlackResigns && state != State.Stalemate && state != State.WhiteMates && state != State.BlackMates) {
 			clickedSquareName = squareName;
 			inputState = InputState.SquareIsClicked;
 			DirectToState ();
 		}
 	}
 	public void OnResignButtonClicked() {
-		if (state != State.BlackWon && state != State.WhiteWon && state != State.GameDrawn) {
+		if (state != State.WhiteResigns && state != State.BlackResigns && state != State.Stalemate && state != State.WhiteMates && state != State.BlackMates) {
 			if (state == State.WhiteSelectionState) {
-				state = State.BlackWon;
+				state = State.WhiteResigns;
 			}
 			if (state == State.BlackSelectionState) {
-				state = State.WhiteWon;
+				state = State.BlackResigns;
 			}
 			DirectToState ();
 		}
 
 	}
 	public void WhiteFlags() {
-		state = State.BlackWon;
+		state = State.WhiteFlags;
 		DirectToState ();
 	}
 	public void BlackFlags() {
-		state = State.WhiteWon;
+		state = State.BlackFlags;
 		DirectToState ();
 	}
 	public void OnWhitePromotionClicked(string choice) {
