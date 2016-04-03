@@ -55,6 +55,10 @@ public class GameManager : MonoBehaviour {
 	public ClockController clockController;
 	public Text moveNotationText;
 	public Text headerText;
+	public GameObject DrawButton;
+	public GameObject ResignButton;
+	public GameObject NewGameButton;
+
 	public ResultPopupController ResultPopupController;
 	private int legalMoveAmount; 
 
@@ -194,6 +198,9 @@ public class GameManager : MonoBehaviour {
 	void IntroState() {
 		GetSquareTransforms ();
 		InitializeBoard ();
+		DrawButton.SetActive (true);
+		ResignButton.SetActive (true);
+		NewGameButton.SetActive (false);
 		state = State.WhiteSelectionState;
 		clockController.clockState = ClockController.StartClockState.Wait;
 		clockController.hoursForWhite = 0;
@@ -351,6 +358,9 @@ public class GameManager : MonoBehaviour {
 		RefreshMoveNotationBoard ();
 		clockController.clockState = ClockController.StartClockState.GameDone;
 		ResultPopupController.ShowStalemateWindow ();
+		DrawButton.SetActive (false);
+		ResignButton.SetActive (false);
+		NewGameButton.SetActive (true);
 	}
 	void WhiteMates() {
 		Debug.Log ("Inside WhiteWon");
@@ -358,6 +368,9 @@ public class GameManager : MonoBehaviour {
 		RefreshMoveNotationBoard ();
 		clockController.clockState = ClockController.StartClockState.GameDone;
 		ResultPopupController.ShowMateWindow ();
+		DrawButton.SetActive (false);
+		ResignButton.SetActive (false);
+		NewGameButton.SetActive (true);
 	}
 	void BlackMates() {
 		Debug.Log ("Inside BlackWon");
@@ -365,28 +378,43 @@ public class GameManager : MonoBehaviour {
 		RefreshMoveNotationBoard ();
 		clockController.clockState = ClockController.StartClockState.GameDone;
 		ResultPopupController.ShowMateWindow ();
+		DrawButton.SetActive (false);
+		ResignButton.SetActive (false);
+		NewGameButton.SetActive (true);
 	}
 	void BlackResigns() {
 		Debug.Log ("Inside WhiteWon");
 		boardPositions [plyMove].AddWhiteWinToNotation();
 		RefreshMoveNotationBoard ();
 		clockController.clockState = ClockController.StartClockState.GameDone;
+		DrawButton.SetActive (false);
+		ResignButton.SetActive (false);
+		NewGameButton.SetActive (true);
 	}
 	void WhiteResigns() {
 		Debug.Log ("Inside BlackWon");
 		boardPositions [plyMove].AddBlackWinToNotation();
 		RefreshMoveNotationBoard ();
 		clockController.clockState = ClockController.StartClockState.GameDone;
+		DrawButton.SetActive (false);
+		ResignButton.SetActive (false);
+		NewGameButton.SetActive (true);
 	}
 	void WhiteFlagsState() {
 		boardPositions [plyMove].AddBlackWinToNotation();
 		RefreshMoveNotationBoard ();
 		clockController.clockState = ClockController.StartClockState.GameDone;
+		DrawButton.SetActive (false);
+		ResignButton.SetActive (false);
+		NewGameButton.SetActive (true);
 	}
 	void BlackFlagsState() {
 		boardPositions [plyMove].AddWhiteWinToNotation();
 		RefreshMoveNotationBoard ();
 		clockController.clockState = ClockController.StartClockState.GameDone;
+		DrawButton.SetActive (false);
+		ResignButton.SetActive (false);
+		NewGameButton.SetActive (true);
 	}
 	#endregion
 	#region Events
