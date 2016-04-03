@@ -6,8 +6,16 @@ public class SettingsManager : MonoBehaviour {
 
 	public Dropdown humanPlaysDropDown;
 	public InputField time;
+	private static int dropDownValue = 0;
+	private static int minutes = 5;
+
+	void Start() {
+		humanPlaysDropDown.value = dropDownValue;
+		time.text = minutes.ToString ();
+	}
 
 	public void ChangeHumanColour() {
+		dropDownValue = humanPlaysDropDown.value;
 
 		switch (humanPlaysDropDown.value) {
 		case 0:
@@ -25,6 +33,7 @@ public class SettingsManager : MonoBehaviour {
 		Debug.Log ("OnTimeChange");
 		if (time.text != string.Empty) {
 			GameManager.minutes = int.Parse (time.text);
+			minutes = GameManager.minutes;
 		}
 
 	}

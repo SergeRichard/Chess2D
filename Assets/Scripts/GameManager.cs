@@ -58,9 +58,11 @@ public class GameManager : MonoBehaviour {
 	public GameObject DrawButton;
 	public GameObject ResignButton;
 	public GameObject NewGameButton;
+	public GameObject ChessBoard;
 
 	public ResultPopupController ResultPopupController;
 	private int legalMoveAmount; 
+	private bool flipBoard = false;
 
 	public PromotionController promotionController;
 
@@ -196,11 +198,21 @@ public class GameManager : MonoBehaviour {
 
 	#region States
 	void IntroState() {
+		flipBoard = (humanPlays == HumanPlays.Black);
+
+		if (flipBoard)
+			ChessBoard.transform.rotation = Quaternion.Euler (new Vector3(0f, 0f, 180f));
+		else
+			ChessBoard.transform.rotation = Quaternion.Euler (new Vector3(0f, 0f, 0f));
+		
 		GetSquareTransforms ();
+
 		InitializeBoard ();
 		DrawButton.SetActive (true);
 		ResignButton.SetActive (true);
 		NewGameButton.SetActive (false);
+
+
 		state = State.WhiteSelectionState;
 		clockController.clockState = ClockController.StartClockState.Wait;
 		clockController.hoursForWhite = 0;
