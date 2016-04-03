@@ -54,6 +54,7 @@ public class GameManager : MonoBehaviour {
 	private List<Square> squares = new List<Square>();
 	public ClockController clockController;
 	public Text moveNotationText;
+	public Text headerText;
 	public ResultPopupController ResultPopupController;
 	private int legalMoveAmount; 
 
@@ -200,6 +201,9 @@ public class GameManager : MonoBehaviour {
 		clockController.hoursForBlack = 0;
 		clockController.minutesForBlack = minutes;
 		clockController.ShowStartTimes ();
+
+		headerText.text = humanPlays == HumanPlays.White ? "Human - Computer" : "Computer - Human";
+
 		DirectToState ();
 	}
 	void WhiteSelectionState() {
