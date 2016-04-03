@@ -195,6 +195,11 @@ public class GameManager : MonoBehaviour {
 		InitializeBoard ();
 		state = State.WhiteSelectionState;
 		clockController.clockState = ClockController.StartClockState.Wait;
+		clockController.hoursForWhite = 0;
+		clockController.minutesForWhite = minutes;
+		clockController.hoursForBlack = 0;
+		clockController.minutesForBlack = minutes;
+		clockController.ShowStartTimes ();
 		DirectToState ();
 	}
 	void WhiteSelectionState() {

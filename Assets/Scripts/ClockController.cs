@@ -21,12 +21,34 @@ public class ClockController : MonoBehaviour {
 	public StartClockState clockState = StartClockState.Wait;
 
 	void Start() {
+//		timeToDisplayForWhite = FormatTime(hoursForWhite,minutesForWhite,secondsForWhite);
+//		timeToDisplayForBlack = FormatTime(hoursForBlack,minutesForBlack,secondsForBlack);
+//		TimeWhiteText.text = timeToDisplayForWhite;
+//		TimeBlackText.text = timeToDisplayForBlack;
+		ShowStartTimes ();
+	}
+	public void ShowStartTimes() {
+		//int minForWhite = minutesForWhite, minForBlack = minutesForBlack, hrForWhite = 0, hrForBlack = 0;
+
+		if (minutesForWhite > 59) {
+			ConvertMinutesToHourMinutes ();
+
+		}
 		timeToDisplayForWhite = FormatTime(hoursForWhite,minutesForWhite,secondsForWhite);
 		timeToDisplayForBlack = FormatTime(hoursForBlack,minutesForBlack,secondsForBlack);
 		TimeWhiteText.text = timeToDisplayForWhite;
 		TimeBlackText.text = timeToDisplayForBlack;
 	}
-
+	public void ConvertMinutesToHourMinutes () {
+		if (minutesForWhite > 59) {
+			hoursForWhite = minutesForWhite / 60;
+			minutesForWhite = minutesForWhite - (hoursForWhite * 60);
+		}
+		if (minutesForBlack > 59) {
+			hoursForBlack = minutesForBlack / 60;
+			minutesForBlack = minutesForBlack - (hoursForBlack * 60);
+		}
+	}
 	public void StartClock(StartClockState clockState) {
 		this.clockState = clockState;
 	}
